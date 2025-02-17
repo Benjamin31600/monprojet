@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <title>Bienvenue sur OCR Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tailwind CSS pour un design moderne et responsive -->
+  <!-- Tailwind CSS pour un design moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-  <!-- JsBarcode pour la génération des codes-barres -->
+  <!-- JsBarcode pour générer les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* Style inspiré par Airbnb */
+    /* Interface moderne inspirée d'Airbnb */
     body {
       background-color: #F7F9FC;
       font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -91,14 +91,15 @@
   </style>
 </head>
 <body>
-  <!-- En-tête avec message de bienvenue -->
+  <!-- En-tête -->
   <header>
     <h1>Bienvenue sur OCR Pro</h1>
-    <p>Extraction intelligente des numéros de série et génération de codes-barres</p>
+    <p>Extraction intelligente des numéros de série & génération de codes-barres</p>
   </header>
 
+  <!-- Conteneur principal -->
   <div class="container">
-    <!-- Section d'upload -->
+    <!-- Zone d'upload -->
     <div class="card">
       <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
       <input type="file" id="imageInput" class="w-full mb-4" accept="image/*;capture=camera">
@@ -120,7 +121,7 @@
       <textarea id="ocrText" rows="6" class="w-full p-2 border border-gray-300 rounded bg-gray-50" readonly></textarea>
     </div>
 
-    <!-- Liste des serial numbers et validation -->
+    <!-- Section des numéros extraits -->
     <div id="serialSection" class="card hidden">
       <h2 class="text-xl font-bold mb-2">Serial Numbers détectés :</h2>
       <ul id="serialList" class="space-y-2"></ul>
@@ -132,7 +133,7 @@
 
   <script>
     /**********************************************************
-     * Pseudo apprentissage : stockage local des numéros validés
+     * Pseudo-apprentissage local : stockage des numéros validés
      **********************************************************/
     const STORAGE_KEY = "confirmedSerialNumbers";
     function getConfirmedSerialNumbers() {
@@ -157,30 +158,57 @@
     }
 
     /**********************************************************
-     * Nettoyage du texte : suppression des accents et des caractères non-ASCII
+     * Nettoyage du texte : supprimer accents et caractères non-ASCII
      **********************************************************/
     function cleanText(text) {
       // Supprimer les accents
       text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      // Supprimer tout caractère non-ASCII (donc éliminer les losanges et "???" indésirables)
+      // Conserver uniquement les caractères ASCII (codes 32 à 126)
       return text.replace(/[^\x20-\x7E]/g, "");
     }
 
     /**********************************************************
-     * Extraction des serial numbers
-     * On se concentre ici sur les tokens qui commencent par "SER" et contiennent "CHT" séparé par un espace.
+     * Extraction intelligente des serial numbers
+     * On prend en compte de multiples mots-clés : 
+     * - "SERIAL NUMBER", "NUMERO DE SERIE", "PART NUMBER", "SEIRALS NUMBERS", "N° SERIES", etc.
      **********************************************************/
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
-      // Forcer un espace entre "SER" et "CHT" s'il manque
-      text = text.replace(/(SER)\s*(CHT)/g, "$1 $2");
-      // Regex pour capturer uniquement les numéros avec le format "SER CHT <digits>"
-      const regex = /SER\s+CHT\s+\d{3,}/g;
-      let matches = text.match(regex) || [];
-      // Prioriser les numéros déjà validés
+      let found = [];
+
+      // Liste des patterns pour capter diverses variantes
+      const patterns = [
+        /(?:SERIAL\s*NUMBER(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
+        /(?:NUMERO\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
+        /(?:PART\s*NUMBER\s*[:\-]?\s*)([\w\s\-]+)/gi,
+        /(?:SER(?:IAL)?(?:S)?\s*[:\-]?\s*)([\w\s\-]{3,})/gi,
+        /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi
+      ];
+
+      patterns.forEach(regex => {
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          // match[1] contient le contenu après le mot-clé, ou si non disponible, match[0]
+          let token = match[1] || match[0];
+          token = token.trim();
+          // Supprimer les espaces internes pour vérifier la longueur
+          if (token.replace(/\s+/g, "").length >= 3 && !found.includes(token)) {
+            found.push(token);
+          }
+        }
+      });
+
+      // Union : si des numéros validés sont en local et absents de l'extraction, on les ajoute
       const confirmed = getConfirmedSerialNumbers();
-      matches.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
-      return matches;
+      confirmed.forEach(num => {
+        if (!found.includes(num)) {
+          found.unshift(num); // les ajouter en début
+        }
+      });
+
+      // Prioriser les numéros validés
+      found.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
+      return found;
     }
 
     /**********************************************************
@@ -191,6 +219,7 @@
       document.getElementById("ocrText").value = cleaned;
       document.getElementById("results").classList.remove("hidden");
 
+      // Extraire les serial numbers
       const serialNumbers = extractSerialNumbers(cleaned);
       const serialList = document.getElementById("serialList");
       serialList.innerHTML = "";
@@ -201,6 +230,8 @@
           const li = document.createElement("li");
           li.className = "serial-item";
           li.textContent = `${num} (LEN: ${num.replace(/\s+/g, "").length})`;
+          
+          // Bouton de validation
           const btnGroup = document.createElement("div");
           if (getConfirmedSerialNumbers().includes(num)) {
             const badge = document.createElement("span");
@@ -230,7 +261,7 @@
       }
       document.getElementById("serialSection").classList.remove("hidden");
 
-      // Génération des codes-barres pour chaque numéro détecté
+      // Génération des codes-barres pour chaque serial number
       const barcodeArea = document.getElementById("barcodeArea");
       barcodeArea.innerHTML = "";
       serialNumbers.forEach((num, index) => {
@@ -247,8 +278,8 @@
         JsBarcode(svg, num.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 4,      // Codes-barres suffisamment larges pour un flash fiable
-          height: 100,   // Hauteur augmentée pour une meilleure lisibilité
+          width: 4,
+          height: 100,
           displayValue: false
         });
       });
@@ -263,7 +294,7 @@
         alert("Veuillez sélectionner une image.");
         return;
       }
-      // Affichage d'un indicateur de chargement
+      // Indicateur de chargement
       document.getElementById("results").classList.add("hidden");
       document.getElementById("serialSection").classList.add("hidden");
       document.getElementById("barcodeArea").innerHTML = "";
