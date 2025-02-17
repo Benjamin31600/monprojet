@@ -4,35 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Extraction & Apprentissage des Serial Numbers</title>
-  <!-- Bootstrap 5 CSS -->
+  <!-- Bootstrap 5 CSS pour une interface moderne -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
-  <!-- JsBarcode pour les codes-barres -->
+  <!-- JsBarcode pour générer des codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #ffffff;
       padding: 20px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    h1 {
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
     .card {
-      box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+      box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
       border: none;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      border-radius: 0.5rem;
     }
     .spinner-border {
       width: 3rem;
       height: 3rem;
     }
     .barcode-card svg {
-      margin: auto;
+      margin: 0 auto 10px auto;
       display: block;
-      margin-bottom: 10px;
     }
     .result-title {
-      font-weight: bold;
+      font-weight: 600;
       font-size: 1.1rem;
+      margin-bottom: 10px;
     }
     .feedback-btn {
       min-width: 90px;
@@ -41,9 +46,9 @@
 </head>
 <body>
   <div class="container">
-    <h1 class="text-center mb-4">Extraction & Apprentissage des Serial Numbers</h1>
+    <h1 class="text-center">Extraction des Serial Numbers</h1>
     
-    <!-- Zone de prise de photo / sélection d'image -->
+    <!-- Zone de prise de photo -->
     <div class="mb-3">
       <label for="imageInput" class="form-label">Prenez ou sélectionnez une photo :</label>
       <input type="file" id="imageInput" class="form-control" accept="image/*;capture=camera">
@@ -56,17 +61,16 @@
     <!-- Indicateur de chargement -->
     <div id="loading" class="text-center" style="display:none;">
       <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2">Analyse de l'image en cours...</p>
+      <p class="mt-2">Analyse en cours...</p>
     </div>
     
-    <!-- Zone des résultats -->
+    <!-- Affichage du texte OCR et des résultats -->
     <div id="results" style="display:none;">
-      <div class="card p-3 mb-3">
-        <div class="result-title">Texte extrait :</div>
+      <div class="card p-3">
+        <div class="result-title">Texte OCR complet :</div>
         <pre id="output" class="bg-light p-2 rounded"></pre>
       </div>
-      
-      <div class="card p-3 mb-3">
+      <div class="card p-3">
         <div class="result-title">Serial Numbers extraits :</div>
         <ul id="serialList" class="list-group mt-2"></ul>
       </div>
@@ -77,9 +81,10 @@
   </div>
 
   <script>
-    /**************************************************
-    * Gestion de l'apprentissage (sauvegarde locale)
-    ***************************************************/
+    /**************************************
+     * "Machine Learning" simulé par feedback
+     * Les numéros validés sont sauvegardés
+     **************************************/
     const STORAGE_KEY = 'confirmedSerialNumbers';
     function getConfirmedSerialNumbers() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -92,58 +97,46 @@
       }
     }
     
-    /**************************************************
-    * Extraction des serial numbers via OCR
-    * On recherche les indicateurs suivants dans le texte :
-    * "numéro de série", "n° de série", "serial numbers", etc.
-    * et on extrait la partie qui suit, en autorisant espaces et caractères.
-    ***************************************************/
+    /*****************************************************
+     * Extraction intelligente des serial numbers
+     * On recherche les indicateurs « serial number »
+     * ou équivalents en français, puis on récupère le texte
+     * qui suit, en autorisant espaces, tirets, etc.
+     *****************************************************/
     function extractSerialNumbers(text) {
       let results = [];
-      
-      // Nettoyer certains caractères spéciaux
+      // Nettoyer les guillemets et certains caractères spéciaux
       text = text.replace(/[“”«»]/g, '"');
-      
-      // Expressions régulières pour détecter les indicateurs suivis d'une séquence
-      // On accepte des espaces, lettres, chiffres et tirets.
-      const regexPatterns = [
-        /(?:num(?:é|e)ro\s*de\s*s[eé]rie(?:s)?|n°\s*de\s*s[eé]rie|serial\s*numbers?)\s*[:\-]?\s*([\w\s\-]+)/gi,
-        // Option générique : si la ligne contient le mot "serie" suivi d'une séquence
-        /serie\s*[:\-]?\s*([\w\s\-]+)/gi
-      ];
-      
-      regexPatterns.forEach(regex => {
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-          // On prend le groupe 1 qui contient la séquence après l'indicateur
-          // Découper selon des délimiteurs (virgules, retours à la ligne)
-          let parts = match[1].split(/[\n,;]+/);
-          parts.forEach(token => {
-            token = token.trim();
-            // On retire les espaces internes si besoin et on vérifie la longueur minimale
-            let candidate = token.replace(/\s+/g, '');
-            if (candidate.length >= 4 && !results.includes(candidate)) {
-              results.push(candidate);
-            }
-          });
-        }
-      });
-      
+      // Expression régulière pour capturer le contenu après les indicateurs
+      // On accepte lettres, chiffres, espaces, tirets et underscores
+      const regex = /(?:num(?:é|e)ro\s*de\s*s[eé]rie|n°\s*de\s*s[eé]rie|serial\s*numbers?)\s*[:\-]?\s*([\w\s\-\_]+)/gi;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        // Découper en tokens sur virgule, point-virgule ou retour à la ligne
+        let parts = match[1].split(/[\n,;]+/);
+        parts.forEach(token => {
+          token = token.trim();
+          // Supprimer les espaces internes pour obtenir une chaîne continue
+          let candidate = token.replace(/\s+/g, '');
+          if (candidate.length >= 4 && !results.includes(candidate)) {
+            results.push(candidate);
+          }
+        });
+      }
       return results;
     }
     
-    /**************************************************
-    * Affichage des résultats et gestion du feedback
-    ***************************************************/
+    /*****************************************************
+     * Affichage des résultats et des codes-barres
+     *****************************************************/
     function displayResults(ocrText, serialNumbers) {
-      // Afficher le texte OCR complet
+      // Affichage du texte OCR complet
       document.getElementById('output').textContent = ocrText;
       
-      // Affichage de la liste des serial numbers avec feedback
+      // Affichage de la liste avec feedback
       const serialList = document.getElementById('serialList');
       serialList.innerHTML = "";
       let confirmed = getConfirmedSerialNumbers();
-      
       if (serialNumbers.length === 0) {
         serialList.innerHTML = "<li class='list-group-item'>Aucun serial number détecté.</li>";
       } else {
@@ -152,44 +145,41 @@
           li.className = "list-group-item d-flex justify-content-between align-items-center";
           li.textContent = num + " (Len: " + num.length + ")";
           
-          // Boutons de feedback
           const btnGroup = document.createElement('div');
           if (confirmed.includes(num)) {
-            // Déjà validé
             const badge = document.createElement('span');
             badge.className = "badge bg-success";
             badge.textContent = "Validé";
             btnGroup.appendChild(badge);
           } else {
-            const btnValider = document.createElement('button');
-            btnValider.className = "btn btn-sm btn-outline-success feedback-btn me-2";
-            btnValider.textContent = "Valider";
-            btnValider.addEventListener('click', () => {
+            const btnValidate = document.createElement('button');
+            btnValidate.className = "btn btn-sm btn-outline-success feedback-btn me-2";
+            btnValidate.textContent = "Valider";
+            btnValidate.addEventListener('click', () => {
               addConfirmedSerialNumber(num);
               btnGroup.innerHTML = "<span class='badge bg-success'>Validé</span>";
             });
-            const btnRejeter = document.createElement('button');
-            btnRejeter.className = "btn btn-sm btn-outline-danger feedback-btn";
-            btnRejeter.textContent = "Rejeter";
-            btnRejeter.addEventListener('click', () => {
-              // En cas de rejet, on retire le numéro de l'affichage
+            const btnReject = document.createElement('button');
+            btnReject.className = "btn btn-sm btn-outline-danger feedback-btn";
+            btnReject.textContent = "Rejeter";
+            btnReject.addEventListener('click', () => {
               li.remove();
-              // On peut aussi éventuellement le stocker en liste de rejet...
             });
-            btnGroup.appendChild(btnValider);
-            btnGroup.appendChild(btnRejeter);
+            btnGroup.appendChild(btnValidate);
+            btnGroup.appendChild(btnReject);
           }
           li.appendChild(btnGroup);
           serialList.appendChild(li);
         });
       }
       
-      // Affichage des codes-barres
+      // Affichage des codes-barres dans une grille moderne
       const barcodeArea = document.getElementById('barcodeArea');
       barcodeArea.innerHTML = "";
       serialNumbers.forEach((num, index) => {
         const col = document.createElement('div');
-        col.className = "col-12 col-sm-6 col-md-4";
+        col.className = "col-12 col-sm-6 col-md-4 mb-3";
+        
         const card = document.createElement('div');
         card.className = "card p-3 text-center barcode-card";
         
@@ -215,9 +205,9 @@
       });
     }
     
-    /**************************************************
-    * Gestion du processus OCR
-    ***************************************************/
+    /*****************************************************
+     * Lancement du processus OCR
+     *****************************************************/
     document.getElementById('processBtn').addEventListener('click', () => {
       const file = document.getElementById('imageInput').files[0];
       if (!file) {
@@ -225,14 +215,14 @@
         return;
       }
       
-      // Réinitialiser l'affichage
+      // Réinitialisation des affichages
       document.getElementById('results').style.display = 'none';
       document.getElementById('barcodeArea').innerHTML = "";
       document.getElementById('serialList').innerHTML = "";
       document.getElementById('output').textContent = "";
       document.getElementById('loading').style.display = 'block';
       
-      // Lancer l'OCR via Tesseract.js
+      // Lancement de l'analyse OCR
       Tesseract.recognize(
         file,
         'fra',
@@ -240,9 +230,8 @@
       ).then(({ data: { text } }) => {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('results').style.display = 'block';
-        // Extraction des serial numbers uniquement
+        // Extraction des serial numbers
         const extracted = extractSerialNumbers(text);
-        // Afficher uniquement les numéros validés ou extraits
         displayResults(text, extracted);
       })
       .catch(err => {
