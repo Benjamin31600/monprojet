@@ -2,75 +2,90 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>OCR Avancé avec OpenCV & Tesseract</title>
+  <title>OCR Ultra Avancé (Client-Side)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   
-  <!-- Tailwind CSS (CDN) pour un design très moderne -->
+  <!-- Tailwind CSS pour un design très moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Tesseract.js (OCR) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   
-  <!-- OpenCV.js pour prétraiter l'image côté client -->
+  <!-- OpenCV.js pour prétraiter l'image (plus avancé) -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
   
-  <!-- JsBarcode (codes-barres) -->
+  <!-- JsBarcode pour les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  
+
   <style>
-    /* Styles additionnels pour un look plus premium */
+    /* Fond dégradé plus marqué, pour un style "ultra moderne" */
     body {
-      background: linear-gradient(120deg, #f9fafb 0%, #ffffff 100%);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(120deg, #e2ebf0 0%, #ffffff 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #1f2937;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Header stylé */
+    header {
+      background: #1f2937;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      width: 100%;
+      padding: 0 1rem;
     }
     .card {
       @apply bg-white shadow-md rounded-lg p-4 mb-6;
     }
     .title {
-      @apply text-2xl font-bold text-center mb-6 uppercase tracking-wider;
+      @apply text-2xl font-bold mb-4 text-center uppercase tracking-wider;
+      color: #111827;
+    }
+    .btn-primary {
+      @apply bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-semibold;
     }
     .spinner {
       @apply animate-spin h-12 w-12 text-blue-600;
-    }
-    .btn-primary {
-      @apply bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700;
-    }
-    .btn-secondary {
-      @apply bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300;
-    }
-    .badge {
-      @apply inline-block px-2 py-1 text-xs font-semibold rounded;
-    }
-    .badge-success {
-      @apply bg-green-500 text-white;
     }
     .feedback-btn {
       min-width: 80px;
     }
     .barcode-card {
-      @apply bg-white shadow-md rounded p-4 flex flex-col items-center;
+      @apply bg-white shadow-md rounded p-4 flex flex-col items-center mb-4;
     }
     .barcode-title {
       @apply text-sm font-semibold mb-2 text-center;
     }
-    .textarea-ocr {
-      @apply w-full h-40 p-2 border border-gray-300 rounded mt-2 bg-gray-50;
-      resize: none;
+    textarea {
+      @apply w-full p-2 border border-gray-300 rounded mt-2 bg-gray-50;
+      resize: vertical;
     }
-    /* Masque de compatibilité si Tailwind JIT non actif */
+    /* Pour Tailwind fallback */
     [class^="@apply"] {
-      /* no-op, for fallback */
+      /* no-op fallback */
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
-  <div class="container mx-auto p-4 max-w-3xl">
-    <h1 class="title">OCR Avancé des Serial Numbers</h1>
+<body>
+  <header>Extraction Ultra-Avancée des Serial Numbers</header>
+  
+  <div class="container">
+    <!-- Titre principal -->
+    <h1 class="title">Analyse OCR & Codes-Barres</h1>
 
     <!-- Zone de sélection / prise de photo -->
     <div class="card">
-      <label class="block mb-2 font-semibold" for="imageInput">
+      <label class="block font-semibold mb-2" for="imageInput">
         Sélectionnez ou prenez une photo :
       </label>
       <input
@@ -81,7 +96,7 @@
       />
       <button
         id="processBtn"
-        class="btn-primary w-full text-center font-semibold"
+        class="btn-primary w-full text-center"
       >
         Analyser l'image
       </button>
@@ -114,11 +129,13 @@
 
     <!-- Résultats -->
     <div id="results" class="hidden">
+      <!-- Texte OCR brut -->
       <div class="card">
-        <h2 class="text-lg font-bold mb-2">Texte OCR brut :</h2>
-        <textarea id="output" class="textarea-ocr" readonly></textarea>
+        <h2 class="text-lg font-bold mb-2">Texte OCR brut (ASCII only) :</h2>
+        <textarea id="output" rows="8" readonly></textarea>
       </div>
 
+      <!-- Liste des serial numbers -->
       <div class="card">
         <h2 class="text-lg font-bold mb-2">Serial Numbers détectés :</h2>
         <ul id="serialList" class="space-y-2"></ul>
@@ -129,8 +146,8 @@
     <div id="barcodeArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 
     <p class="text-center text-sm text-gray-500 mt-6">
-      Les numéros validés sont mémorisés et remontent en priorité. <br />
-      Si le lecteur ne parvient pas à scanner, augmentez la taille (width/height).
+      Les numéros validés sont mémorisés (localStorage) et prioritaires.<br />
+      Si un lecteur ne flashe pas, augmentez la taille (width/height).
     </p>
   </div>
 
@@ -152,32 +169,28 @@
 
     /************************************************************
      * Prétraitement d'image (OpenCV.js)
-     *  - On fait un traitement simple : conversion en niveaux de gris,
-     *    binarisation (threshold), etc. pour réduire le bruit.
      ************************************************************/
     async function preprocessImage(file) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = function () {
-          // Créer un canvas de la taille de l'image
+          // Canvas
           const canvas = document.createElement("canvas");
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0);
-          
-          // Quand OpenCV est chargé (Module), on peut traiter
+
+          // Vérifier si OpenCV est chargé
           if (typeof cv === "undefined") {
-            // Si opencv.js n'est pas encore chargé
             return resolve(canvas.toDataURL("image/png"));
           }
 
           try {
-            // Convertir en Mat OpenCV
             let src = cv.imread(canvas);
             let dst = new cv.Mat();
 
-            // Convertir en niveau de gris
+            // Convertir en niveaux de gris
             cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
 
             // Binarisation adaptative
@@ -192,27 +205,23 @@
               15
             );
 
-            // (Optionnel) enlever du bruit
-            let ksize = new cv.Size(3, 3);
+            // Optionnel : petit flou pour réduire le bruit
             cv.medianBlur(thresh, thresh, 3);
 
-            // Remettre dans le canvas
+            // Afficher sur le canvas
             cv.imshow(canvas, thresh);
 
-            // Libérer la mémoire
             src.delete();
             dst.delete();
             thresh.delete();
 
-            // Retourner l'image traitée en base64
             resolve(canvas.toDataURL("image/png"));
-          } catch (e) {
-            console.error(e);
+          } catch (err) {
+            console.error(err);
             resolve(canvas.toDataURL("image/png"));
           }
         };
         img.onerror = reject;
-        // Charger l'image depuis le File
         const reader = new FileReader();
         reader.onload = function (evt) {
           img.src = evt.target.result;
@@ -223,21 +232,19 @@
 
     /************************************************************
      * Extraction avancée des Serial Numbers
+     *  - On enlève tout caractère hors ASCII
+     *  - On passe en majuscules
      ************************************************************/
     function extractSerialNumbers(rawText) {
-      // 1) Nettoyage agressif
+      // 1) Forcer ASCII : retirer tout ce qui est en dehors de [32-126]
       let text = rawText
-        .replace(/[? ]/g, "") // retire ? et  
-        .replace(/[“”«»]/g, '"')
-        // enlever accents
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        // éventuellement tout passer en majuscules (optionnel)
+        .replace(/[^\x20-\x7E]/g, "") // supprime tout hors ASCII
         .toUpperCase();
 
-      // 2) Patterns multiples
+      // 2) Patterns
       const patterns = [
         // Pièces sérialisées, SER, S/N, Part Number, etc.
-        /(?:PIECES?\s*SERIALISEES?\s*N[°O]?|SERIAL\s*NUMBERS?|S\/N|SER\s|N°\sDE\SSERIE|NUMERO\sDE\SSERIE|PART\s*NUMBER)\s*[:\-]?\s*([\w\s\-\_]*)/gi,
+        /(?:PIECES?\s*SERIALISEES?\s*N[°O]?|SERIAL\s*NUMBERS?|S\/N|SER\s|N°\sDE\sSERIE|NUMERO\sDE\sSERIE|PART\s*NUMBER)\s*[:\-]?\s*([\w\s\-\_]*)/gi,
         // SER CHT 1522 ou SERCHT1522
         /\bSER\s?[A-Z]{0,5}\s?\d+\b/gi,
       ];
@@ -261,18 +268,18 @@
       const confirmed = getConfirmedSerialNumbers();
       found.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
 
-      return found;
+      return { text, found };
     }
 
     /************************************************************
      * Affichage du texte OCR, liste, codes-barres
      ************************************************************/
     function displayResults(ocrText, serialNumbers) {
-      // 1) Afficher le texte OCR
+      // 1) Texte OCR
       const outputEl = document.getElementById("output");
       outputEl.value = ocrText;
 
-      // 2) Afficher la liste
+      // 2) Liste
       const serialList = document.getElementById("serialList");
       serialList.innerHTML = "";
       const confirmed = getConfirmedSerialNumbers();
@@ -295,7 +302,8 @@
           if (confirmed.includes(num)) {
             // Badge validé
             const badge = document.createElement("span");
-            badge.className = "badge badge-success text-white";
+            badge.className =
+              "badge badge-success px-2 py-1 text-white text-xs font-bold";
             badge.textContent = "Validé";
             btnGroup.appendChild(badge);
           } else {
@@ -305,7 +313,7 @@
             btnValidate.textContent = "Valider";
             btnValidate.addEventListener("click", () => {
               addConfirmedSerialNumber(num);
-              btnGroup.innerHTML = `<span class="badge badge-success text-white">Validé</span>`;
+              btnGroup.innerHTML = `<span class="badge badge-success px-2 py-1 text-white text-xs font-bold">Validé</span>`;
             });
 
             const btnReject = document.createElement("button");
@@ -343,12 +351,12 @@
 
         barcodeArea.appendChild(div);
 
-        // Génération du code-barres (plus grand qu'avant)
+        // Génération du code-barres (plus grand)
         JsBarcode(svg, num.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 3,   // Augmenté pour faciliter le flash
-          height: 80, // Augmenté pour faciliter le flash
+          width: 3,   // Largeur augmentée
+          height: 80, // Hauteur augmentée
           displayValue: false,
         });
       });
@@ -362,7 +370,7 @@
       .addEventListener("click", async function handleClick() {
         const file = document.getElementById("imageInput").files[0];
         if (!file) {
-          alert("Veuillez choisir ou prendre une photo.");
+          alert("Veuillez sélectionner ou prendre une photo.");
           return;
         }
 
@@ -372,7 +380,6 @@
         const serialList = document.getElementById("serialList");
         const outputEl = document.getElementById("output");
 
-        // Réinitialiser l'affichage
         resultsEl.classList.add("hidden");
         barcodeArea.innerHTML = "";
         serialList.innerHTML = "";
@@ -380,22 +387,22 @@
         loadingEl.classList.remove("hidden");
 
         try {
-          // 1) Prétraiter l'image via OpenCV.js
+          // 1) Prétraiter via OpenCV
           const processedDataUrl = await preprocessImage(file);
 
-          // 2) Passer l'image traitée à Tesseract
-          const { data } = await Tesseract.recognize(processedDataUrl, "fra", {
+          // 2) Tesseract (lang = fra+eng)
+          const { data } = await Tesseract.recognize(processedDataUrl, "fra+eng", {
             logger: (m) => console.log(m),
           });
-          const text = data.text;
+          let text = data.text;
 
-          // 3) Extraire les numéros
-          const extracted = extractSerialNumbers(text);
+          // 3) Extraire
+          const { text: asciiText, found } = extractSerialNumbers(text);
 
           // 4) Afficher
           loadingEl.classList.add("hidden");
           resultsEl.classList.remove("hidden");
-          displayResults(text, extracted);
+          displayResults(asciiText, found);
         } catch (err) {
           console.error(err);
           loadingEl.classList.add("hidden");
