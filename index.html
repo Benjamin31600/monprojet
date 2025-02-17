@@ -2,15 +2,14 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR en Ligne avec OCR.space</title>
+  <title>OCR en Ligne - Expérience Utilisateur Optimisée</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Utilisation de Tailwind CSS pour un design moderne -->
+  <!-- Tailwind CSS pour un design moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       background: #f9fafb;
       font-family: sans-serif;
-      padding: 1rem;
     }
     .container {
       max-width: 600px;
@@ -29,13 +28,13 @@
     <input type="file" id="fileInput" class="block w-full mb-4" accept="image/*;capture=camera">
     <button id="uploadBtn" class="w-full bg-blue-600 text-white py-2 rounded">Analyser l'image</button>
     <div id="result" class="mt-4 hidden">
-      <h2 class="text-xl font-bold mb-2">Texte OCR :</h2>
+      <h2 class="text-xl font-bold mb-2">Texte OCR nettoyé :</h2>
       <pre id="ocrText" class="bg-gray-100 p-2 rounded"></pre>
     </div>
   </div>
 
   <script>
-    // Clé API OCR.space fournie
+    // Utilisez votre clé API OCR.space
     const apiKey = "K86564656988957";
 
     document.getElementById('uploadBtn').addEventListener('click', async () => {
@@ -51,7 +50,8 @@
 
       const formData = new FormData();
       formData.append('apikey', apiKey);
-      formData.append('language', 'fra');  // Vous pouvez changer en "eng" si besoin
+      // Utilisez "fre" pour le français
+      formData.append('language', 'fre');  
       formData.append('isOverlayRequired', 'false');
       formData.append('file', file);
 
@@ -67,8 +67,11 @@
           return;
         }
         
-        // Extraire le texte OCR
-        const ocrText = result.ParsedResults[0].ParsedText;
+        // Récupérer le texte OCR
+        let ocrText = result.ParsedResults[0].ParsedText;
+        // Supprimer tous les caractères hors ASCII pour éliminer les losanges et points d'interrogation
+        ocrText = ocrText.replace(/[^\x20-\x7E]/g, "");
+        
         document.getElementById('ocrText').textContent = ocrText;
         document.getElementById('result').classList.remove('hidden');
       } catch (err) {
