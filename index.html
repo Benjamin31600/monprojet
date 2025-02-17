@@ -2,74 +2,69 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR Ultra - Refonte Totale</title>
+  <title>OCR Ultra Final (Client-Side)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Tailwind CSS (CDN) pour un design très moderne -->
+  
+  <!-- Tailwind CSS (CDN) pour un design moderne et épuré -->
   <script src="https://cdn.tailwindcss.com"></script>
-
+  
   <!-- Tesseract.js (OCR) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-
-  <!-- OpenCV.js pour prétraiter l'image côté client -->
+  
+  <!-- OpenCV.js pour prétraiter l'image -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-
-  <!-- JsBarcode pour générer les codes-barres -->
+  
+  <!-- JsBarcode pour les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
   <style>
-    /* ---- Hero Section en haut, style sombre ---- */
-    .hero {
-      background: linear-gradient(135deg, #1f2937 0%, #3b4252 100%);
-      color: #fff;
-      padding: 2rem 1rem;
+    /* ----- HEADER FLAT DESIGN ----- */
+    header {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem;
       text-align: center;
     }
-    .hero h1 {
-      font-size: 2rem;
+    header h1 {
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-    .hero p {
-      font-size: 1rem;
-      opacity: 0.8;
+      letter-spacing: 1px;
+      color: #1f2937;
+      margin: 0;
     }
 
-    /* ---- Container principal ---- */
+    /* ----- CONTAINER ----- */
     .container {
       max-width: 900px;
-      margin: -4rem auto 2rem;
+      margin: 1rem auto 3rem;
       padding: 0 1rem;
-      position: relative;
     }
 
-    /* ---- Carte stylée ---- */
+    /* ----- CARD ----- */
     .card {
       @apply bg-white shadow-md rounded-lg p-4 mb-6;
     }
 
-    /* ---- Boutons ---- */
+    /* ----- BUTTONS ----- */
     .btn-primary {
       @apply bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-semibold;
     }
-
     .btn-secondary {
       @apply bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300 font-semibold;
     }
 
-    /* ---- Spinner ---- */
+    /* ----- SPINNER ----- */
     .spinner {
       @apply animate-spin h-12 w-12 text-blue-600;
     }
 
-    /* ---- Feedback / Validation ---- */
+    /* ----- FEEDBACK ----- */
     .feedback-btn {
       min-width: 80px;
     }
 
-    /* ---- Cartes codes-barres ---- */
+    /* ----- BARCODE CARD ----- */
     .barcode-card {
       @apply bg-white shadow-md rounded p-4 flex flex-col items-center mb-4;
     }
@@ -77,28 +72,28 @@
       @apply text-sm font-semibold mb-2 text-center;
     }
 
-    /* ---- Textarea ---- */
+    /* ----- TEXTAREA ----- */
     textarea {
       @apply w-full p-2 border border-gray-300 rounded mt-2 bg-gray-50;
       resize: vertical;
     }
 
-    /* ---- Tailwind fallback for @apply if needed ---- */
+    /* Fallback si Tailwind @apply non géré */
     [class^="@apply"] {
       /* no-op fallback */
     }
   </style>
 </head>
-<body class="flex flex-col min-h-screen bg-gray-100">
-  <!-- Hero Section -->
-  <div class="hero">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+  <!-- Header -->
+  <header>
     <h1>Extraction Avancée des Serial Numbers</h1>
-    <p>OCR client-side + pseudo-apprentissage local</p>
-  </div>
+  </header>
 
+  <!-- Main container -->
   <div class="container">
-    <!-- Carte d'upload -->
-    <div class="card relative z-10">
+    <!-- Zone de sélection / prise de photo -->
+    <div class="card">
       <label for="imageInput" class="block font-semibold mb-2">
         Sélectionnez ou prenez une photo :
       </label>
@@ -108,9 +103,15 @@
         class="block w-full mb-4"
         accept="image/*;capture=camera"
       />
-      <button id="processBtn" class="btn-primary w-full text-center">
-        Analyser l'image
-      </button>
+      
+      <div class="flex space-x-2">
+        <button id="processBtn" class="btn-primary flex-1 text-center">
+          Analyser l'image
+        </button>
+        <button id="contrastBtn" class="btn-secondary flex-1 text-center">
+          Contraste +
+        </button>
+      </div>
     </div>
 
     <!-- Indicateur de chargement -->
@@ -139,14 +140,14 @@
     </div>
 
     <!-- Résultats -->
-    <div id="results" class="hidden z-10 relative">
-      <!-- Texte OCR brut (ASCII) -->
+    <div id="results" class="hidden">
+      <!-- Texte OCR brut -->
       <div class="card">
         <h2 class="text-lg font-bold mb-2">Texte OCR (ASCII uniquement) :</h2>
         <textarea id="output" rows="8" readonly></textarea>
       </div>
 
-      <!-- Liste de numéros -->
+      <!-- Serial numbers détectés -->
       <div class="card">
         <h2 class="text-lg font-bold mb-2">Serial Numbers détectés :</h2>
         <ul id="serialList" class="space-y-2"></ul>
@@ -154,14 +155,13 @@
     </div>
 
     <!-- Zone d'affichage des codes-barres -->
-    <div id="barcodeArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 z-10 relative"></div>
+    <div id="barcodeArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
   </div>
 
-  <footer class="mt-auto py-4 text-center text-sm text-gray-500 bg-gray-200">
+  <footer class="mt-auto bg-gray-100 text-center text-sm text-gray-500 py-4 border-t border-gray-200">
     <p>
-      Les numéros validés sont mémorisés en local et remontent en priorité.
-      <br />
-      Si un scanner ne lit pas le code-barres, augmentez la taille (width/height).
+      Les numéros validés sont sauvegardés localement et priorisés lors de prochaines analyses.<br/>
+      Si un scanner ne lit pas le code-barres, augmentez sa taille (width/height).
     </p>
   </footer>
 
@@ -182,7 +182,14 @@
     }
 
     /************************************************************
+     * Paramètres de prétraitement
+     ************************************************************/
+    let extraContrast = false; // si l'utilisateur clique sur "Contraste +"
+
+    /************************************************************
      * Prétraitement d'image (OpenCV.js)
+     * - Binarisation adaptative
+     * - Option "Contraste +" (plus agressif)
      ************************************************************/
     async function preprocessImage(file) {
       return new Promise((resolve, reject) => {
@@ -194,23 +201,29 @@
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0);
 
-          // Vérifier OpenCV
           if (typeof cv === "undefined") {
-            // Si non chargé, on retourne l'image brute
             return resolve(canvas.toDataURL("image/png"));
           }
 
           try {
             let src = cv.imread(canvas);
-            let dst = new cv.Mat();
+            let gray = new cv.Mat();
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-            // Niveaux de gris
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+            // Contraste + (optionnel)
+            if (extraContrast) {
+              let alpha = 2.0; // plus fort
+              let beta = 50.0; // luminosité
+              let contrasted = new cv.Mat();
+              gray.convertTo(contrasted, -1, alpha, beta);
+              gray.delete();
+              gray = contrasted;
+            }
 
             // Binarisation adaptative
             let thresh = new cv.Mat();
             cv.adaptiveThreshold(
-              dst,
+              gray,
               thresh,
               255,
               cv.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -219,15 +232,15 @@
               15
             );
 
-            // Flou médian
+            // Flou médian pour réduire le bruit
             cv.medianBlur(thresh, thresh, 3);
 
-            // Afficher
+            // Rendu final
             cv.imshow(canvas, thresh);
 
-            // Nettoyage
+            // Libérer la mémoire
             src.delete();
-            dst.delete();
+            gray.delete();
             thresh.delete();
 
             resolve(canvas.toDataURL("image/png"));
@@ -245,16 +258,16 @@
 
     /************************************************************
      * Extraction avancée des Serial Numbers
-     *  - Filtrage ASCII (supprime les losanges, etc.)
-     *  - Passage en majuscules
+     *  - Filtrage ASCII
+     *  - Mots-clés multiples
      ************************************************************/
     function extractSerialNumbers(rawText) {
-      // 1) Forcer ASCII only
+      // 1) ASCII only
       let text = rawText
-        .replace(/[^\x20-\x7E]/g, "") // supprime tout hors ASCII
+        .replace(/[^\x20-\x7E]/g, "")
         .toUpperCase();
 
-      // 2) Recherche via plusieurs regex
+      // 2) Patterns
       const patterns = [
         // Pièces sérialisées, SER, S/N, Part Number...
         /(?:PIECES?\s*SERIALISEES?\s*N[°O]?|SERIAL\s*NUMBERS?|S\/N|SER\s|N°\sDE\sSERIE|NUMERO\sDE\sSERIE|PART\s*NUMBER)\s*[:\-]?\s*([\w\s\-\_]*)/gi,
@@ -285,7 +298,7 @@
     }
 
     /************************************************************
-     * Affichage du texte OCR, liste, codes-barres
+     * Affichage : texte OCR, liste, codes-barres
      ************************************************************/
     function displayResults(asciiText, serialNumbers) {
       // 1) Texte OCR
@@ -369,60 +382,75 @@
         JsBarcode(svg, num.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 4,   // encore plus large
-          height: 100, // encore plus haut
+          width: 4,   // plus large
+          height: 100, // plus haut
           displayValue: false,
         });
       });
     }
 
     /************************************************************
-     * Processus global : prétraitement + OCR + extraction
+     * Processus global : OCR
      ************************************************************/
-    document
-      .getElementById("processBtn")
-      .addEventListener("click", async function handleClick() {
-        const file = document.getElementById("imageInput").files[0];
-        if (!file) {
-          alert("Veuillez choisir ou prendre une photo.");
-          return;
-        }
+    async function runOcr(file) {
+      const loadingEl = document.getElementById("loading");
+      const resultsEl = document.getElementById("results");
+      const barcodeArea = document.getElementById("barcodeArea");
+      const serialList = document.getElementById("serialList");
+      const outputEl = document.getElementById("output");
 
-        const loadingEl = document.getElementById("loading");
-        const resultsEl = document.getElementById("results");
-        const barcodeArea = document.getElementById("barcodeArea");
-        const serialList = document.getElementById("serialList");
-        const outputEl = document.getElementById("output");
+      resultsEl.classList.add("hidden");
+      barcodeArea.innerHTML = "";
+      serialList.innerHTML = "";
+      outputEl.value = "";
+      loadingEl.classList.remove("hidden");
 
-        resultsEl.classList.add("hidden");
-        barcodeArea.innerHTML = "";
-        serialList.innerHTML = "";
-        outputEl.value = "";
-        loadingEl.classList.remove("hidden");
+      try {
+        // 1) Prétraiter
+        const processedDataUrl = await preprocessImage(file);
 
-        try {
-          // 1) Prétraiter via OpenCV
-          const processedDataUrl = await preprocessImage(file);
+        // 2) Tesseract
+        const { data } = await Tesseract.recognize(processedDataUrl, "fra+eng", {
+          logger: (m) => console.log(m),
+        });
+        let text = data.text || "";
 
-          // 2) Tesseract (multi-langues : fra+eng)
-          const { data } = await Tesseract.recognize(processedDataUrl, "fra+eng", {
-            logger: (m) => console.log(m),
-          });
-          let text = data.text || "";
+        // 3) Extraire
+        const { asciiText, found } = extractSerialNumbers(text);
 
-          // 3) Extraire
-          const { asciiText, found } = extractSerialNumbers(text);
+        // 4) Afficher
+        loadingEl.classList.add("hidden");
+        resultsEl.classList.remove("hidden");
+        displayResults(asciiText, found);
+      } catch (err) {
+        console.error(err);
+        loadingEl.classList.add("hidden");
+        alert("Une erreur est survenue lors de l'analyse.");
+      }
+    }
 
-          // 4) Afficher
-          loadingEl.classList.add("hidden");
-          resultsEl.classList.remove("hidden");
-          displayResults(asciiText, found);
-        } catch (err) {
-          console.error(err);
-          loadingEl.classList.add("hidden");
-          alert("Une erreur est survenue lors de l'analyse.");
-        }
-      });
+    /************************************************************
+     * Gestion des boutons
+     ************************************************************/
+    document.getElementById("processBtn").addEventListener("click", () => {
+      const file = document.getElementById("imageInput").files[0];
+      if (!file) {
+        alert("Veuillez sélectionner ou prendre une photo.");
+        return;
+      }
+      extraContrast = false;
+      runOcr(file);
+    });
+
+    document.getElementById("contrastBtn").addEventListener("click", () => {
+      const file = document.getElementById("imageInput").files[0];
+      if (!file) {
+        alert("Veuillez sélectionner ou prendre une photo.");
+        return;
+      }
+      extraContrast = true;
+      runOcr(file);
+    });
   </script>
 </body>
 </html>
