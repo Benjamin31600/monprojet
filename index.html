@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR en Ligne - Expérience Utilisateur Optimisée</title>
+  <title>OCR en Ligne - Expérience Optimisée</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Tailwind CSS pour un design moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,7 @@
   </div>
 
   <script>
-    // Utilisez votre clé API OCR.space
+    // Clé API OCR.space
     const apiKey = "K86564656988957";
 
     document.getElementById('uploadBtn').addEventListener('click', async () => {
@@ -50,8 +50,7 @@
 
       const formData = new FormData();
       formData.append('apikey', apiKey);
-      // Utilisez "fre" pour le français
-      formData.append('language', 'fre');  
+      // Nous supprimons le paramètre "language" pour laisser OCR.space détecter automatiquement la langue.
       formData.append('isOverlayRequired', 'false');
       formData.append('file', file);
 
@@ -67,9 +66,8 @@
           return;
         }
         
-        // Récupérer le texte OCR
+        // Extraire et nettoyer le texte OCR (supprimer tout caractère hors ASCII)
         let ocrText = result.ParsedResults[0].ParsedText;
-        // Supprimer tous les caractères hors ASCII pour éliminer les losanges et points d'interrogation
         ocrText = ocrText.replace(/[^\x20-\x7E]/g, "");
         
         document.getElementById('ocrText').textContent = ocrText;
