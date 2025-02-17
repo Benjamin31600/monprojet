@@ -2,15 +2,16 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR en Ligne - Expérience Optimisée</title>
+  <title>OCR Illimité avec Tesseract.js</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tailwind CSS pour un design moderne -->
+  <!-- Utilisation de Tailwind CSS pour un design moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tesseract.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <!-- OpenCV.js -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
   <style>
-    body {
-      background: #f9fafb;
-      font-family: sans-serif;
-    }
+    body { background: #f9fafb; font-family: sans-serif; }
     .container {
       max-width: 600px;
       margin: 2rem auto;
@@ -23,10 +24,10 @@
 </head>
 <body>
   <div class="container">
-    <h1 class="text-2xl font-bold text-center mb-4">OCR en Ligne</h1>
+    <h1 class="text-2xl font-bold text-center mb-4">OCR Illimité</h1>
     <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
     <input type="file" id="fileInput" class="block w-full mb-4" accept="image/*;capture=camera">
-    <button id="uploadBtn" class="w-full bg-blue-600 text-white py-2 rounded">Analyser l'image</button>
+    <button id="processBtn" class="w-full bg-blue-600 text-white py-2 rounded">Analyser l'image</button>
     <div id="result" class="mt-4 hidden">
       <h2 class="text-xl font-bold mb-2">Texte OCR nettoyé :</h2>
       <pre id="ocrText" class="bg-gray-100 p-2 rounded"></pre>
@@ -34,43 +35,90 @@
   </div>
 
   <script>
-    // Clé API OCR.space
-    const apiKey = "K86564656988957";
+    // Fonction de prétraitement d'image avec OpenCV.js
+    async function preprocessImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = function () {
+          // Créer un canvas de la taille de l'image
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
 
-    document.getElementById('uploadBtn').addEventListener('click', async () => {
+          // Vérifier si OpenCV est chargé
+          if (typeof cv === "undefined") {
+            return resolve(canvas.toDataURL("image/png"));
+          }
+
+          try {
+            // Lire l'image dans OpenCV
+            let src = cv.imread(canvas);
+            let gray = new cv.Mat();
+            // Convertir en niveaux de gris
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+            // Appliquer une binarisation adaptative pour améliorer le contraste
+            let thresh = new cv.Mat();
+            cv.adaptiveThreshold(
+              gray,
+              thresh,
+              255,
+              cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+              cv.THRESH_BINARY,
+              15,
+              15
+            );
+            // Optionnel : appliquer un flou médian pour réduire le bruit
+            cv.medianBlur(thresh, thresh, 3);
+            // Afficher le résultat sur le canvas
+            cv.imshow(canvas, thresh);
+            // Libérer la mémoire
+            src.delete(); gray.delete(); thresh.delete();
+            resolve(canvas.toDataURL("image/png"));
+          } catch (err) {
+            console.error(err);
+            resolve(canvas.toDataURL("image/png"));
+          }
+        };
+        img.onerror = reject;
+        const reader = new FileReader();
+        reader.onload = (evt) => (img.src = evt.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Fonction pour effectuer l'OCR avec Tesseract.js
+    async function performOCR(imageDataUrl) {
+      const { data: { text } } = await Tesseract.recognize(imageDataUrl, 'fra', {
+        logger: m => console.log(m)
+      });
+      return text;
+    }
+
+    // Nettoyer le texte en supprimant les caractères non-ASCII (pour éviter les losanges)
+    function cleanText(text) {
+      return text.replace(/[^\x20-\x7E]/g, "");
+    }
+
+    document.getElementById('processBtn').addEventListener('click', async () => {
       const file = document.getElementById('fileInput').files[0];
       if (!file) {
         alert("Veuillez sélectionner une image.");
         return;
       }
       
-      // Masquer le résultat et afficher un message de chargement
       document.getElementById('result').classList.add('hidden');
       document.getElementById('ocrText').textContent = "Analyse en cours...";
 
-      const formData = new FormData();
-      formData.append('apikey', apiKey);
-      // Nous supprimons le paramètre "language" pour laisser OCR.space détecter automatiquement la langue.
-      formData.append('isOverlayRequired', 'false');
-      formData.append('file', file);
-
       try {
-        const response = await fetch('https://api.ocr.space/parse/image', {
-          method: 'POST',
-          body: formData
-        });
-        const result = await response.json();
-
-        if (result.IsErroredOnProcessing) {
-          alert("Erreur OCR: " + result.ErrorMessage);
-          return;
-        }
-        
-        // Extraire et nettoyer le texte OCR (supprimer tout caractère hors ASCII)
-        let ocrText = result.ParsedResults[0].ParsedText;
-        ocrText = ocrText.replace(/[^\x20-\x7E]/g, "");
-        
-        document.getElementById('ocrText').textContent = ocrText;
+        // Prétraiter l'image
+        const processedImage = await preprocessImage(file);
+        // Effectuer l'OCR sur l'image prétraitée
+        let ocrResult = await performOCR(processedImage);
+        // Nettoyer le texte pour supprimer les caractères indésirables
+        ocrResult = cleanText(ocrResult);
+        document.getElementById('ocrText').textContent = ocrResult;
         document.getElementById('result').classList.remove('hidden');
       } catch (err) {
         console.error(err);
