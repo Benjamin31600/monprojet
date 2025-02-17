@@ -2,126 +2,253 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR Illimité avec Tesseract.js</title>
+  <title>Bienvenue - OCR & Codes-Barres</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Utilisation de Tailwind CSS pour un design moderne -->
+  <!-- Tailwind CSS pour un design moderne -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Tesseract.js -->
+  <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-  <!-- OpenCV.js -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <!-- JsBarcode pour générer les codes-barres -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    body { background: #f9fafb; font-family: sans-serif; }
-    .container {
-      max-width: 600px;
-      margin: 2rem auto;
-      padding: 1rem;
+    /* Personnalisation supplémentaire pour un style inspiré par Airbnb */
+    body {
+      background: #F7F9FC;
+    }
+    .header {
+      background: #FF5A5F;
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .card {
       background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn-primary {
+      background-color: #FF5A5F;
+      color: white;
+      padding: 0.75rem 1rem;
       border-radius: 0.5rem;
-      box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background-color: #E14B4F;
+    }
+    .spinner {
+      animation: spin 1s linear infinite;
+      height: 3rem;
+      width: 3rem;
+      color: #FF5A5F;
+      margin: 1rem auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Pour les codes-barres */
+    .barcode-card {
+      text-align: center;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 class="text-2xl font-bold text-center mb-4">OCR Illimité</h1>
-    <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
-    <input type="file" id="fileInput" class="block w-full mb-4" accept="image/*;capture=camera">
-    <button id="processBtn" class="w-full bg-blue-600 text-white py-2 rounded">Analyser l'image</button>
-    <div id="result" class="mt-4 hidden">
-      <h2 class="text-xl font-bold mb-2">Texte OCR nettoyé :</h2>
-      <pre id="ocrText" class="bg-gray-100 p-2 rounded"></pre>
+  <!-- Header / Bienvenue -->
+  <header class="header">
+    <h1>Bienvenue chez OCR Pro</h1>
+    <p class="text-sm">Extraction intelligente des numéros de série & génération de codes-barres</p>
+  </header>
+
+  <!-- Conteneur principal -->
+  <div class="container mx-auto px-4">
+    <!-- Section d'upload -->
+    <div class="card">
+      <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
+      <input type="file" id="imageInput" class="w-full mb-4" accept="image/*;capture=camera">
+      <div class="flex space-x-2">
+        <button id="processBtn" class="btn-primary flex-1 text-center">Analyser l'image</button>
+      </div>
     </div>
+
+    <!-- Indicateur de chargement -->
+    <div id="loading" class="hidden text-center">
+      <svg class="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <p class="text-blue-600 font-semibold">Analyse en cours...</p>
+    </div>
+
+    <!-- Résultats OCR -->
+    <div id="results" class="card hidden">
+      <h2 class="text-xl font-bold mb-2">Texte OCR nettoyé :</h2>
+      <textarea id="ocrText" rows="6" class="w-full p-2 border border-gray-200 rounded bg-gray-50" readonly></textarea>
+    </div>
+
+    <!-- Liste des serial numbers et validation -->
+    <div id="serialSection" class="card hidden">
+      <h2 class="text-xl font-bold mb-2">Serial Numbers détectés :</h2>
+      <ul id="serialList" class="space-y-2"></ul>
+    </div>
+
+    <!-- Zone d'affichage des codes-barres -->
+    <div id="barcodeArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
   </div>
 
   <script>
-    // Fonction de prétraitement d'image avec OpenCV.js
-    async function preprocessImage(file) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = function () {
-          // Créer un canvas de la taille de l'image
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-
-          // Vérifier si OpenCV est chargé
-          if (typeof cv === "undefined") {
-            return resolve(canvas.toDataURL("image/png"));
-          }
-
-          try {
-            // Lire l'image dans OpenCV
-            let src = cv.imread(canvas);
-            let gray = new cv.Mat();
-            // Convertir en niveaux de gris
-            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-            // Appliquer une binarisation adaptative pour améliorer le contraste
-            let thresh = new cv.Mat();
-            cv.adaptiveThreshold(
-              gray,
-              thresh,
-              255,
-              cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-              cv.THRESH_BINARY,
-              15,
-              15
-            );
-            // Optionnel : appliquer un flou médian pour réduire le bruit
-            cv.medianBlur(thresh, thresh, 3);
-            // Afficher le résultat sur le canvas
-            cv.imshow(canvas, thresh);
-            // Libérer la mémoire
-            src.delete(); gray.delete(); thresh.delete();
-            resolve(canvas.toDataURL("image/png"));
-          } catch (err) {
-            console.error(err);
-            resolve(canvas.toDataURL("image/png"));
-          }
-        };
-        img.onerror = reject;
-        const reader = new FileReader();
-        reader.onload = (evt) => (img.src = evt.target.result);
-        reader.readAsDataURL(file);
-      });
+    // Pseudo "machine learning" : stockage local des numéros validés
+    const STORAGE_KEY = "confirmedSerialNumbers";
+    function getConfirmedSerialNumbers() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }
+    function addConfirmedSerialNumber(num) {
+      const confirmed = getConfirmedSerialNumbers();
+      if (!confirmed.includes(num)) {
+        confirmed.push(num);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(confirmed));
+      }
     }
 
     // Fonction pour effectuer l'OCR avec Tesseract.js
-    async function performOCR(imageDataUrl) {
-      const { data: { text } } = await Tesseract.recognize(imageDataUrl, 'fra', {
+    async function performOCR(file) {
+      // Lancer Tesseract sur l'image sélectionnée (langue française ici, peut être ajusté)
+      const { data: { text } } = await Tesseract.recognize(file, 'fra', {
         logger: m => console.log(m)
       });
       return text;
     }
 
-    // Nettoyer le texte en supprimant les caractères non-ASCII (pour éviter les losanges)
+    // Fonction pour nettoyer le texte : supprimer caractères hors ASCII (pour éliminer les losanges, "???" etc.)
     function cleanText(text) {
       return text.replace(/[^\x20-\x7E]/g, "");
     }
 
-    document.getElementById('processBtn').addEventListener('click', async () => {
-      const file = document.getElementById('fileInput').files[0];
+    // Extraction des serial numbers via regex
+    function extractSerialNumbers(text) {
+      // On convertit en majuscules pour standardiser
+      text = text.toUpperCase();
+      // Liste de patterns pour détecter des numéros de série, part number, etc.
+      const patterns = [
+        /(?:SER\s?[A-Z0-9\-]{3,})/g,               // Exemple: SER CHT-1520, SER1520, etc.
+        /(?:PART\s*NUMBER\s*[:\-]?\s*[A-Z0-9\-]+)/g, // Exemple: PART NUMBER: PN123456
+        /(?:NUMERO\s*DE\s*SERIE\s*[:\-]?\s*[A-Z0-9\-]+)/g
+      ];
+      let found = [];
+      patterns.forEach(pattern => {
+        const matches = text.match(pattern);
+        if (matches) {
+          matches.forEach(match => {
+            match = match.trim();
+            if (match && !found.includes(match)) {
+              found.push(match);
+            }
+          });
+        }
+      });
+      // Prioriser les numéros validés déjà (stockés dans localStorage)
+      const confirmed = getConfirmedSerialNumbers();
+      found.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
+      return found;
+    }
+
+    // Affichage des résultats OCR et extraction des serial numbers
+    function displayResults(rawText) {
+      const cleanedText = cleanText(rawText);
+      document.getElementById("ocrText").value = cleanedText;
+      document.getElementById("results").classList.remove("hidden");
+
+      // Extraire les serial numbers
+      const serialNumbers = extractSerialNumbers(cleanedText);
+      const serialList = document.getElementById("serialList");
+      serialList.innerHTML = "";
+      if (serialNumbers.length === 0) {
+        serialList.innerHTML = "<li class='text-gray-600'>Aucun numéro de série détecté.</li>";
+      } else {
+        serialNumbers.forEach(num => {
+          const li = document.createElement("li");
+          li.className = "flex justify-between items-center p-2 bg-gray-50 rounded";
+          li.textContent = num + " (LEN: " + num.replace(/\s+/g, "").length + ")";
+          
+          // Bouton de validation pour simuler l'apprentissage
+          const btnGroup = document.createElement("div");
+          if (getConfirmedSerialNumbers().includes(num)) {
+            const badge = document.createElement("span");
+            badge.className = "bg-green-500 text-white text-xs font-bold px-2 py-1 rounded";
+            badge.textContent = "Validé";
+            btnGroup.appendChild(badge);
+          } else {
+            const btnValidate = document.createElement("button");
+            btnValidate.className = "bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-2 py-1 rounded mr-2";
+            btnValidate.textContent = "Valider";
+            btnValidate.addEventListener("click", () => {
+              addConfirmedSerialNumber(num);
+              btnGroup.innerHTML = '<span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">Validé</span>';
+            });
+            const btnReject = document.createElement("button");
+            btnReject.className = "bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
+            btnReject.textContent = "Rejeter";
+            btnReject.addEventListener("click", () => {
+              li.remove();
+            });
+            btnGroup.appendChild(btnValidate);
+            btnGroup.appendChild(btnReject);
+          }
+          li.appendChild(btnGroup);
+          serialList.appendChild(li);
+        });
+      }
+      document.getElementById("serialSection").classList.remove("hidden");
+      
+      // Générer les codes-barres pour chaque serial number
+      const barcodeArea = document.getElementById("barcodeArea");
+      barcodeArea.innerHTML = "";
+      serialNumbers.forEach((num, index) => {
+        const div = document.createElement("div");
+        div.className = "barcode-card";
+        const title = document.createElement("div");
+        title.className = "barcode-title";
+        title.textContent = num + " (LEN: " + num.replace(/\s+/g, "").length + ")";
+        div.appendChild(title);
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "barcode-" + index;
+        div.appendChild(svg);
+        barcodeArea.appendChild(div);
+        
+        JsBarcode(svg, num.replace(/\s+/g, ""), {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 4,   // code-barres plus large pour faciliter le flash
+          height: 100, // plus haut pour une meilleure lisibilité
+          displayValue: false
+        });
+      });
+    }
+
+    document.getElementById("processBtn").addEventListener("click", async () => {
+      const file = document.getElementById("imageInput").files[0];
       if (!file) {
         alert("Veuillez sélectionner une image.");
         return;
       }
-      
-      document.getElementById('result').classList.add('hidden');
-      document.getElementById('ocrText').textContent = "Analyse en cours...";
-
+      document.getElementById("loading").classList.remove("hidden");
+      // Lancer l'OCR directement sur le fichier image
       try {
-        // Prétraiter l'image
-        const processedImage = await preprocessImage(file);
-        // Effectuer l'OCR sur l'image prétraitée
-        let ocrResult = await performOCR(processedImage);
-        // Nettoyer le texte pour supprimer les caractères indésirables
-        ocrResult = cleanText(ocrResult);
-        document.getElementById('ocrText').textContent = ocrResult;
-        document.getElementById('result').classList.remove('hidden');
+        const rawText = await performOCR(file);
+        document.getElementById("loading").classList.add("hidden");
+        displayResults(rawText);
       } catch (err) {
         console.error(err);
+        document.getElementById("loading").classList.add("hidden");
         alert("Une erreur est survenue lors de l'analyse.");
       }
     });
