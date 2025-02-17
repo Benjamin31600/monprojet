@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>OCR & Génération de Codes-Barres</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { font-size: 1.5em; }
+    #output, #barcodes { margin-top: 20px; }
+    svg { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Prendre une photo et générer des codes-barres</h1>
+  <p>
+    Sélectionnez ou prenez une photo contenant le(s) numéro(s) de série :
+  </p>
+  <input type="file" id="imageInput" accept="image/*;capture=camera">
+  <br><br>
+  <button id="processBtn">Analyser l'image</button>
+
+  <div id="output"></div>
+  <div id="barcodes"></div>
+
+  <script>
+    document.getElementById('processBtn').addEventListener('click', () => {
+      const file = document.getElementById('imageInput').files[0];
+      if (!file) {
+        return alert("Veuillez prendre ou sélectionner une photo.");
+      }
+      Tesseract.recognize(
+        file,
+        'fra',
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        // Afficher le texte extrait
+        document.getElementById('output').textContent = "Texte extrait : " + text;
+        // Extraire les numéros de série avec une regex
+        const regex = /\b[A-Z0-9]{8,}\b/g;
+        const matches = text.match(regex) || [];
+        if (matches.length === 0) {
+          return alert("Aucun numéro de série détecté.");
+        }
+        document.getElementById('output').textContent += "\nNuméros détectés : " + matches.join(", ");
+        // Générer les codes-barres pour chaque numéro détecté
+        const barcodeContainer = document.getElementById('barcodes');
+        barcodeContainer.innerHTML = "";
+        matches.forEach((num, index) => {
+          let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.id = "barcode" + index;
+          barcodeContainer.appendChild(svg);
+          JsBarcode(svg, num, {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 2,
+            height: 50,
+            displayValue: true
+          });
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Une erreur est survenue lors de l'analyse de l'image.");
+      });
+    });
+  </script>
+</body>
+</html>
