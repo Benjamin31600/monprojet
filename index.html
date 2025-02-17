@@ -3,29 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Extraction Avancée des Serial Numbers</title>
-  <!-- Bootstrap 5 CSS pour un design moderne et professionnel -->
+  <title>OCR Avancé : Extraction & Apprentissage des Serial Numbers</title>
+  
+  <!-- Bootstrap 5 CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
   <!-- Tesseract.js pour l'OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <!-- JsBarcode pour générer des codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
+  
   <style>
-    /* --- Style général pour un rendu plus "corporate" --- */
+    /* ====== Style général pour un rendu plus premium et responsive ====== */
     body {
       margin: 0;
       padding: 0;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #e8eaed 0%, #fdfdfd 100%);
+      background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
       min-height: 100vh;
     }
 
     .container {
-      padding: 30px 15px;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: auto;
     }
 
     h1 {
@@ -34,7 +37,7 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       text-align: center;
-      color: #343a40;
+      color: #2c3e50;
     }
 
     .card {
@@ -58,10 +61,16 @@
       font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 10px;
+      color: #34495e;
     }
 
     .feedback-btn {
       min-width: 90px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
     .footer-note {
@@ -75,9 +84,9 @@
 
 <body>
   <div class="container">
-    <h1>Extraction Avancée des Serial Numbers</h1>
+    <h1>OCR Avancé : Serial Numbers</h1>
 
-    <!-- Zone de prise ou sélection de photo -->
+    <!-- Sélection / prise de photo -->
     <div class="mb-3">
       <label for="imageInput" class="form-label"
         >Prenez ou sélectionnez une photo :</label
@@ -102,13 +111,15 @@
       <p class="mt-2">Analyse en cours...</p>
     </div>
 
-    <!-- Zone d'affichage du texte OCR et des numéros extraits -->
+    <!-- Zone d'affichage des résultats -->
     <div id="results" style="display: none">
+      <!-- Texte OCR brut -->
       <div class="card p-3">
         <div class="result-title">Texte OCR complet :</div>
         <pre id="output" class="bg-light p-2 rounded"></pre>
       </div>
 
+      <!-- Liste des serial numbers extraits -->
       <div class="card p-3">
         <div class="result-title">Serial Numbers extraits :</div>
         <ul id="serialList" class="list-group mt-2"></ul>
@@ -120,17 +131,17 @@
 
     <div class="footer-note">
       <p>
-        Astuce : Sur PC, vous devrez sélectionner un fichier image.<br />
-        Sur smartphone, vous pouvez prendre une photo directement.
+        Astuce : Sur PC, vous devrez choisir un fichier image.<br />
+        Sur smartphone, vous pouvez prendre une photo directement.<br />
+        Si le lecteur code-barres ne détecte pas, augmentez la taille (width/height).
       </p>
     </div>
   </div>
 
   <script>
-    /******************************************
-     * Simulation d'Apprentissage Automatique
-     * (stockage local des numéros validés)
-     ******************************************/
+    /****************************************************
+     * Pseudo "Machine Learning" : stockage local
+     ****************************************************/
     const STORAGE_KEY = "confirmedSerialNumbers";
     function getConfirmedSerialNumbers() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -143,67 +154,60 @@
       }
     }
 
-    /***************************************************
+    /****************************************************
      * Extraction avancée des Serial Numbers
-     *  - On normalise le texte pour gérer les caractères spéciaux (accents)
-     *  - On recherche plusieurs variantes (SER, Pièces sérialisées N°, etc.)
+     * - On supprime les caractères ? et on retire certains symboles
+     * - On cherche toutes les variantes (Part Number, Pièces sérialisées, SER, etc.)
      ****************************************************/
     function extractSerialNumbers(rawText) {
-      // 1) Normaliser pour retirer les accents et caractères diacritiques
+      // 1) Nettoyer le texte : supprimer points d'interrogation, guillemets exotiques, etc.
       let text = rawText
+        .replace(/\?/g, "") // retire les ?
+        .replace(/[“”«»]/g, '"')
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // supprime les accents
-        .replace(/[“”«»]/g, '"'); // guillemets exotiques
+        .replace(/[\u0300-\u036f]/g, ""); // retire accents
 
-      // 2) Définir un ensemble de patterns plus large
-      //    On cherche la mention, puis on capture la suite
-      //    (lettres, chiffres, espaces, tirets, underscores, etc.)
+      // 2) Définir plusieurs motifs
+      //    On capture la suite (lettres, chiffres, espaces, tirets, underscores)
       const patterns = [
-        // Pièces sérialisées N°, SER, S/N, Part Number, etc.
+        // Variantes courantes : Pièces sérialisées N°, SER, S/N, Part Number, etc.
         /(?:pieces?\s*serialisees?\s*n[°o]?|serial\s*numbers?|s\/n|ser\s|n°\sde\sserie|numero\sde\sserie|part\s*number)\s*[:\-]?\s*([\w\s\-\_]*)/gi,
-        // Parfois, "SER CHT 1522" ou "SERCHT1522" direct
+        // SER CHT 1522 ou SERCHT1522
         /\bSER\s?[A-Z]{0,5}\s?\d+\b/gi,
       ];
 
-      // 3) Rassembler tous les résultats
       let found = [];
       patterns.forEach((regex) => {
         let match;
         while ((match = regex.exec(text)) !== null) {
-          // Séparer éventuellement sur points-virgules, virgules, retours à la ligne
-          let parts = match[1]
-            ? match[1].split(/[\n,;]+/)
-            : [match[0]]; // si la capture est sur match[0]
+          // Séparer sur sauts de ligne, virgules, etc.
+          let parts = match[1] ? match[1].split(/[\n,;]+/) : [match[0]];
           parts.forEach((token) => {
             let candidate = token.trim();
-            // Retirer les espaces internes pour calculer la longueur
             let candidateNoSpace = candidate.replace(/\s+/g, "");
-            if (
-              candidateNoSpace.length >= 3 && // on peut ajuster selon vos besoins
-              !found.includes(candidate) &&
-              !/^[\s\-]+$/.test(candidate)
-            ) {
+            // On exige une longueur minimale pour éviter les faux positifs
+            if (candidateNoSpace.length >= 3 && !found.includes(candidate)) {
               found.push(candidate);
             }
           });
         }
       });
 
-      // 4) Prioriser les numéros déjà validés
+      // 3) Prioriser les numéros déjà validés
       const confirmed = getConfirmedSerialNumbers();
       found.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
 
       return found;
     }
 
-    /*****************************************************
-     * Affichage des résultats (texte + liste + codes-barres)
-     *****************************************************/
+    /****************************************************
+     * Affichage : texte OCR, liste, codes-barres
+     ****************************************************/
     function displayResults(ocrText, serialNumbers) {
-      // 1) Afficher le texte OCR complet
+      // Afficher le texte OCR brut
       document.getElementById("output").textContent = ocrText;
 
-      // 2) Afficher la liste des serial numbers
+      // Afficher la liste de numéros
       const serialList = document.getElementById("serialList");
       serialList.innerHTML = "";
       const confirmed = getConfirmedSerialNumbers();
@@ -216,15 +220,14 @@
           const li = document.createElement("li");
           li.className =
             "list-group-item d-flex justify-content-between align-items-center";
-
-          // Calculer la longueur (sans espaces)
+          // Longueur sans espaces
           const len = num.replace(/\s+/g, "").length;
           li.textContent = `${num} (Len: ${len})`;
 
-          // Boutons de validation / rejet
+          // Boutons feedback
           const btnGroup = document.createElement("div");
           if (confirmed.includes(num)) {
-            // Si déjà validé, on affiche un badge "Validé"
+            // Déjà validé
             const badge = document.createElement("span");
             badge.className = "badge bg-success";
             badge.textContent = "Validé";
@@ -250,31 +253,26 @@
             btnGroup.appendChild(btnValidate);
             btnGroup.appendChild(btnReject);
           }
-
           li.appendChild(btnGroup);
           serialList.appendChild(li);
         });
       }
 
-      // 3) Générer les codes-barres
+      // Génération des codes-barres
       const barcodeArea = document.getElementById("barcodeArea");
       barcodeArea.innerHTML = "";
       serialNumbers.forEach((num, index) => {
-        // Création d'une colonne Bootstrap
         const col = document.createElement("div");
         col.className = "col-12 col-sm-6 col-md-4 mb-3";
 
-        // Création d'une carte
         const card = document.createElement("div");
         card.className = "card p-3 text-center barcode-card";
 
-        // Titre de la carte
         const cardTitle = document.createElement("h5");
         const len = num.replace(/\s+/g, "").length;
         cardTitle.textContent = `${num} (Len: ${len})`;
         card.appendChild(cardTitle);
 
-        // Élément SVG pour le code-barres
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode" + index;
         card.appendChild(svg);
@@ -286,16 +284,16 @@
         JsBarcode(svg, num.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 2,
-          height: 60,
+          width: 2,   // Augmentez à 3 ou 4 pour un code-barres plus large
+          height: 60, // Augmentez si besoin d'une hauteur plus grande
           displayValue: false,
         });
       });
     }
 
-    /*****************************************************
+    /****************************************************
      * Lancement du processus OCR
-     *****************************************************/
+     ****************************************************/
     document
       .getElementById("processBtn")
       .addEventListener("click", function handleClick() {
