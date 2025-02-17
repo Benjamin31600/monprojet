@@ -3,100 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OCR & Codes-Barres Modernes</title>
-  <!-- Bootstrap CSS pour une interface moderne et responsive -->
+  <title>OCR & Extraction Avancée de Sérial Numbers</title>
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
-  <!-- JsBarcode pour générer des codes-barres -->
+  <!-- JsBarcode pour les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
+      background-color: #f0f2f5;
       padding: 20px;
-      background-color: #f7f7f7;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .card {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border: none;
+      margin-bottom: 15px;
     }
     .spinner-border {
       width: 3rem;
       height: 3rem;
     }
-    #barcodes svg {
-      margin-bottom: 20px;
+    .barcode-container svg {
+      margin: auto;
+      display: block;
+      margin-bottom: 10px;
     }
-    pre {
-      white-space: pre-wrap;
+    .result-label {
+      font-weight: bold;
+      font-size: 1.1rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="mb-4 text-center">OCR & Génération de Codes-Barres</h1>
+    <h1 class="text-center mb-4">OCR & Extraction Avancée de Sérial Numbers</h1>
     
     <div class="mb-3">
       <label for="imageInput" class="form-label">Prenez ou sélectionnez une photo :</label>
-      <input class="form-control" type="file" id="imageInput" accept="image/*;capture=camera">
+      <input type="file" id="imageInput" class="form-control" accept="image/*;capture=camera">
     </div>
     
-    <div class="d-grid gap-2">
+    <div class="d-grid gap-2 mb-4">
       <button id="processBtn" class="btn btn-primary btn-lg">Analyser l'image</button>
     </div>
     
-    <div class="mt-4" id="loading" style="display: none;">
-      <div class="text-center">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2">Analyse de l'image en cours...</p>
+    <!-- Indicateur de chargement -->
+    <div id="loading" class="text-center" style="display:none;">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2">Analyse de l'image en cours...</p>
+    </div>
+    
+    <!-- Affichage du texte OCR et des numéros -->
+    <div id="results" style="display:none;">
+      <div class="card p-3 mb-3">
+        <div class="result-label">Texte extrait :</div>
+        <pre id="output" class="bg-light p-2 rounded"></pre>
+      </div>
+      <div class="card p-3 mb-3">
+        <div class="result-label">Pièces sérialisées / Serial Numbers :</div>
+        <ul id="serialList" class="list-group mt-2"></ul>
       </div>
     </div>
     
-    <div class="mt-4">
-      <h3>Texte et numéros extraits :</h3>
-      <pre id="output" class="bg-light p-3 rounded"></pre>
-    </div>
-    
-    <div class="mt-4">
-      <h3>Codes-Barres générés :</h3>
-      <div id="barcodes" class="d-flex flex-wrap gap-3"></div>
-    </div>
+    <!-- Affichage des codes-barres générés -->
+    <div id="barcodeArea" class="row"></div>
   </div>
 
   <script>
-    // Fonction pour extraire les numéros de série du texte OCR
+    // Fonction avancée pour extraire les numéros de série du texte OCR
     function extractSerialNumbers(text) {
       let results = [];
-      
-      // Normaliser le texte en enlevant les caractères spéciaux gênants
-      text = text.replace(/[^\w\s\-]/g, ' ');
-      
-      // Découper le texte par lignes
+
+      // Nettoyer le texte des caractères spéciaux gênants
+      text = text.replace(/[^\w\s\:\-]/g, ' ');
+
+      // Scinder le texte en lignes
       const lines = text.split(/\r?\n/);
-      
+
       // Parcourir chaque ligne
       lines.forEach(line => {
-        // Rechercher un "part number" suivi de contenu (insensible à la casse)
-        let partMatch = line.match(/part\s*number\s*[:\-]?\s*(.+)/i);
-        if (partMatch) {
-          // Séparer les potentiels numéros par espace ou virgule
-          partMatch[1].split(/[\s,]+/).forEach(item => {
-            if(item.length >= 5 && !results.includes(item)) {
-              results.push(item.trim());
-            }
-          });
+        // Convertir en minuscules pour simplifier la détection
+        const lowerLine = line.toLowerCase();
+
+        // Si la ligne contient "pièces sérialisées" ou "serial numbers", extraire la partie après les deux-points
+        if (lowerLine.includes("pièces sérialisées") || lowerLine.includes("serial numbers")) {
+          let parts = line.split(/[:\-]/);
+          if (parts.length > 1) {
+            parts.slice(1).forEach(part => {
+              // Séparer en tokens par espace ou virgule
+              part.split(/[\s,]+/).forEach(token => {
+                token = token.trim();
+                // On considère comme numéro de série une chaîne alphanumérique d'au moins 4 caractères
+                if (token.length >= 4 && /^[A-Za-z0-9]+$/.test(token) && !results.includes(token)) {
+                  results.push(token);
+                }
+              });
+            });
+          }
         } else {
-          // Sinon, rechercher dans la ligne des séquences alphanumériques longues
-          let regex = /\b[A-Z0-9]{5,}\b/g;
-          let matches = line.match(regex);
-          if (matches) {
-            matches.forEach(num => {
-              if(!results.includes(num)) {
-                results.push(num.trim());
+          // Recherche générique de chaînes alphanumériques (4 caractères ou plus)
+          let genericMatches = line.match(/\b[A-Za-z0-9]{4,}\b/g);
+          if (genericMatches) {
+            genericMatches.forEach(token => {
+              if (!results.includes(token)) {
+                results.push(token);
               }
             });
           }
         }
       });
-      
+
       return results;
     }
 
+    // Gestion de l'analyse OCR et de l'affichage
     document.getElementById('processBtn').addEventListener('click', () => {
       const file = document.getElementById('imageInput').files[0];
       if (!file) {
@@ -104,59 +126,72 @@
         return;
       }
       
-      // Afficher l'indicateur de chargement
-      document.getElementById('loading').style.display = 'block';
+      // Réinitialiser l'affichage
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('barcodeArea').innerHTML = "";
+      document.getElementById('serialList').innerHTML = "";
       document.getElementById('output').textContent = "";
-      document.getElementById('barcodes').innerHTML = "";
+      document.getElementById('loading').style.display = 'block';
       
+      // Lancer l'OCR avec Tesseract.js
       Tesseract.recognize(
         file,
         'fra',
         { logger: m => console.log(m) }
       ).then(({ data: { text } }) => {
-        // Cacher l'indicateur de chargement
         document.getElementById('loading').style.display = 'none';
         
-        // Afficher le texte brut extrait
-        document.getElementById('output').textContent = "Texte extrait :\n" + text;
+        // Afficher le texte extrait
+        document.getElementById('output').textContent = text;
         
-        // Extraction des numéros de série à l'aide de la fonction personnalisée
+        // Extraire les numéros de série avec la fonction avancée
         const serialNumbers = extractSerialNumbers(text);
         
+        // Afficher la liste des numéros extraits
+        const serialList = document.getElementById('serialList');
         if (serialNumbers.length === 0) {
-          alert("Aucun numéro de série détecté.");
-          return;
+          serialList.innerHTML = "<li class='list-group-item'>Aucun numéro de série détecté.</li>";
+        } else {
+          serialNumbers.forEach(num => {
+            let li = document.createElement('li');
+            li.className = "list-group-item";
+            // On affiche dynamiquement la longueur du numéro détecté
+            li.textContent = num + " (Longueur: " + num.length + ")";
+            serialList.appendChild(li);
+          });
         }
+        document.getElementById('results').style.display = 'block';
         
-        // Afficher les numéros extraits dans le bloc de texte
-        document.getElementById('output').textContent += "\n\nNuméros détectés : " + serialNumbers.join(", ");
-        
-        // Générer et afficher les codes-barres pour chaque numéro
-        const barcodeContainer = document.getElementById('barcodes');
+        // Générer les codes-barres pour chaque numéro extrait
+        const barcodeArea = document.getElementById('barcodeArea');
         serialNumbers.forEach((num, index) => {
-          // Créer un conteneur pour le code-barres
+          // Création d'une carte Bootstrap pour chaque code-barres
+          let col = document.createElement('div');
+          col.className = "col-12 col-sm-6 col-md-4 mb-3";
+          
           let card = document.createElement('div');
-          card.className = "card p-2";
-          card.style.minWidth = "200px";
+          card.className = "card p-3 text-center";
           
-          // Créer un titre pour le numéro
-          let title = document.createElement('h5');
-          title.className = "card-title text-center";
-          title.textContent = num;
-          card.appendChild(title);
+          // Titre avec le numéro et sa longueur
+          let cardTitle = document.createElement('h5');
+          cardTitle.textContent = num + " (Len: " + num.length + ")";
+          card.appendChild(cardTitle);
           
-          // Créer un élément SVG pour le code-barres
+          // Zone pour le code-barres
           let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
           svg.id = "barcode" + index;
+          svg.style.margin = "auto";
           card.appendChild(svg);
-          barcodeContainer.appendChild(card);
           
-          // Générer le code-barres avec JsBarcode
+          col.appendChild(card);
+          barcodeArea.appendChild(col);
+          
+          // Génération du code-barres
           JsBarcode(svg, num, {
             format: "CODE128",
             lineColor: "#000",
             width: 2,
-            height: 50,
+            height: 60,
             displayValue: false
           });
         });
@@ -168,8 +203,8 @@
       });
     });
   </script>
-
-  <!-- Bootstrap JS (optionnel si vous utilisez certains composants JS) -->
+  
+  <!-- Bootstrap Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
