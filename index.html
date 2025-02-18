@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR Daher - Solution Améliorée</title>
+  <title>OCR Daher - Extraction Améliorée</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tailwind CSS pour un design moderne et responsive -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Tesseract.js pour l'OCR -->
+  <!-- Tesseract.js -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-  <!-- JsBarcode pour générer les codes-barres -->
+  <!-- JsBarcode -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <!-- OpenCV.js pour le prétraitement d'image -->
+  <!-- OpenCV.js pour prétraitement -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
   <style>
     :root {
@@ -20,15 +20,13 @@
     body {
       background-color: #F7F9FC;
       font-family: 'Helvetica Neue', Arial, sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0; color: #333;
     }
     header {
-      background-color: var(--primary-color);
+      background: var(--primary-color);
       color: white;
-      padding: 1.5rem;
       text-align: center;
+      padding: 1.5rem;
     }
     header h1 {
       font-size: 2rem;
@@ -47,7 +45,7 @@
       padding: 1rem;
     }
     .card {
-      background-color: #fff;
+      background: #fff;
       border-radius: 0.75rem;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       padding: 1.5rem;
@@ -71,8 +69,7 @@
     }
     .spinner {
       animation: spin 1s linear infinite;
-      height: 3rem;
-      width: 3rem;
+      width: 3rem; height: 3rem;
       color: var(--accent-color);
       margin: 1rem auto;
     }
@@ -100,16 +97,16 @@
   </style>
 </head>
 <body>
-  <!-- En-tête avec logo Daher -->
+  <!-- Header avec logo Daher -->
   <header>
-    <!-- Remplacez l'URL ci-dessous par le logo officiel de Daher -->
+    <!-- Remplacez par l'URL officielle du logo Daher si besoin -->
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Daher_logo.svg/2560px-Daher_logo.svg.png" alt="Logo Daher">
     <h1>OCR Daher</h1>
-    <p>Extraction intelligente et apprentissage auto-améliorant des numéros de série</p>
+    <p>Extraction intelligente auto-apprenant des numéros de série</p>
   </header>
 
   <div class="container">
-    <!-- Section d'upload -->
+    <!-- Zone de sélection d'image -->
     <div class="card">
       <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
       <input type="file" id="imageInput" class="w-full mb-4" accept="image/*;capture=camera">
@@ -138,7 +135,7 @@
       <ul id="extractedList" class="space-y-2"></ul>
     </div>
 
-    <!-- Section finale : affichage des numéros validés et codes-barres -->
+    <!-- Section finale : numéros validés et codes-barres -->
     <div id="finalSection" class="card hidden">
       <h2 class="text-xl font-bold mb-2">Mes numéros validés</h2>
       <ul id="validatedList" class="space-y-2"></ul>
@@ -147,31 +144,45 @@
   </div>
 
   <script>
-    // Prétraitement d'image avec OpenCV.js (si chargé)
+    /**********************************************************
+     * Prétraitement d'image (OpenCV.js)
+     **********************************************************/
     async function preprocessImage(file) {
       return new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = function () {
+        img.onload = function() {
           const canvas = document.createElement("canvas");
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0);
-          if (typeof cv !== "undefined") {
-            try {
-              let src = cv.imread(canvas);
-              let gray = new cv.Mat();
-              cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-              let thresh = new cv.Mat();
-              cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 15);
-              cv.imshow(canvas, thresh);
-              src.delete(); gray.delete(); thresh.delete();
-              resolve(canvas.toDataURL("image/png"));
-            } catch (e) {
-              console.error("OpenCV Error:", e);
-              resolve(canvas.toDataURL("image/png"));
-            }
-          } else {
+          
+          if (typeof cv === "undefined") {
+            // Si OpenCV n'est pas chargé, on renvoie l'image brute
+            return resolve(canvas.toDataURL("image/png"));
+          }
+
+          try {
+            let src = cv.imread(canvas);
+            let gray = new cv.Mat();
+            // Convertir en niveaux de gris
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+            // Binarisation adaptative pour améliorer le contraste
+            let thresh = new cv.Mat();
+            cv.adaptiveThreshold(
+              gray, thresh, 255,
+              cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+              cv.THRESH_BINARY, 15, 15
+            );
+            // Optionnel : flou médian pour réduire le bruit
+            cv.medianBlur(thresh, thresh, 3);
+            // Afficher sur le canvas
+            cv.imshow(canvas, thresh);
+
+            src.delete(); gray.delete(); thresh.delete();
+            resolve(canvas.toDataURL("image/png"));
+          } catch (e) {
+            console.error("OpenCV error:", e);
             resolve(canvas.toDataURL("image/png"));
           }
         };
@@ -182,7 +193,9 @@
       });
     }
 
-    // Stockage local pour simuler un apprentissage
+    /**********************************************************
+     * Stockage local pour valider/dévalider
+     **********************************************************/
     const STORAGE_KEY = "validatedSerials";
     function getValidatedSerials() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -203,32 +216,68 @@
       saveValidatedSerials(validated);
     }
 
-    // OCR avec Tesseract.js (après prétraitement)
+    /**********************************************************
+     * OCR avec Tesseract.js (après prétraitement)
+     **********************************************************/
     async function performOCR(file) {
-      const preprocessed = await preprocessImage(file);
-      const { data: { text } } = await Tesseract.recognize(preprocessed, 'fra', { logger: m => console.log(m) });
+      const preprocessedDataUrl = await preprocessImage(file);
+      const { data: { text } } = await Tesseract.recognize(preprocessedDataUrl, 'fra', { logger: m => console.log(m) });
       return text;
     }
 
-    // Nettoyage du texte (supprimer accents et remplacer U+FFFD)
+    /**********************************************************
+     * Nettoyage du texte
+     * - Supprime accents
+     * - Supprime les caractères de remplacement (losanges)
+     **********************************************************/
     function cleanText(text) {
+      // Supprimer accents
       text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      // Remplacer les caractères de remplacement (losanges)
+      // Supprimer les caractères de remplacement
       text = text.replace(/\uFFFD/g, "");
       return text;
     }
 
-    // Extraction intelligente des numéros de série (ajustez les regex selon vos exemples)
+    /**********************************************************
+     * Extraction intelligente des numéros de série
+     * - Pièces sérialisées N° : on capture les lignes suivantes
+     * - SER, PART NUMBER, N° SERIE, S/N, etc.
+     **********************************************************/
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
+      // On sépare en lignes pour détecter "PIECES SERIALISEES N" et extraire les lignes suivantes
+      let lines = text.split(/\r?\n/);
       let found = [];
+
+      // 1) Extraire les lignes après "PIECES SERIALISEES N" (ou équivalent) jusqu'à une ligne vide
+      let capturing = false;
+      for (let line of lines) {
+        let trimmed = line.trim();
+        if (/PIECES?\s*SERIALISE(ES?|EES?)\s*N°?/i.test(trimmed)) {
+          capturing = true;
+          continue;
+        }
+        if (capturing) {
+          if (!trimmed || trimmed.length < 3) {
+            // on arrête la capture quand la ligne est vide ou trop courte
+            capturing = false;
+          } else {
+            // On peut avoir plusieurs SER sur la même ligne
+            // ex: "SER CHT 1521 SER CHT 1522"
+            found.push(... detectSerNumbers(trimmed));
+          }
+        }
+      }
+
+      // 2) Détecter via des regex multiples
+      // On utilise le text complet pour d'autres variantes
       const patterns = [
         /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:SERIAL(?:S)?\s*NUMBER(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:S\/N\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:PART\s*NUMBER\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
-        // Pattern générique pour "SER" suivi de chiffres/lettres (optionnel)
+        // Pattern générique pour "SER" suivi d'un bloc
         /(?:SER\s+([A-Z0-9\-]{3,}))/gi
       ];
       patterns.forEach(regex => {
@@ -240,13 +289,28 @@
           }
         }
       });
+
       return found;
     }
 
-    // Affichage des résultats OCR et gestion de la validation/dévalidation
+    // Détection de SER sur la même ligne : ex. "SER CHT 1521 SER CHT 1522"
+    function detectSerNumbers(line) {
+      // On utilise une petite regex pour détecter SER + bloc
+      let results = [];
+      let regex = /(?:SER\s+([A-Z0-9\-]{3,}))/gi;
+      let match;
+      while ((match = regex.exec(line)) !== null) {
+        results.push(match[1].trim());
+      }
+      return results;
+    }
+
+    /**********************************************************
+     * Affichage OCR + Validation
+     **********************************************************/
     function displayOCRResults(rawText) {
       const cleaned = cleanText(rawText);
-      document.getElementById("ocrText").textContent = cleaned;
+      document.getElementById("ocrText").value = cleaned;
       document.getElementById("results").classList.remove("hidden");
       document.getElementById("successMsg").classList.remove("hidden");
       return extractSerialNumbers(cleaned);
@@ -264,22 +328,24 @@
           li.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
           const btnGroup = document.createElement("div");
           if (getValidatedSerials().includes(serial)) {
+            // Dévalider
             const btnDeselect = document.createElement("button");
             btnDeselect.className = "bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
             btnDeselect.textContent = "Désélectionner";
             btnDeselect.addEventListener("click", () => {
               removeValidatedSerial(serial);
-              li.style.display = "none";
+              li.remove();
               updateFinalSection();
             });
             btnGroup.appendChild(btnDeselect);
           } else {
+            // Valider
             const btnValidate = document.createElement("button");
             btnValidate.className = "bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-2 py-1 rounded";
             btnValidate.textContent = "Valider";
             btnValidate.addEventListener("click", () => {
               addValidatedSerial(serial);
-              li.style.display = "none";
+              li.remove();
               updateFinalSection();
             });
             btnGroup.appendChild(btnValidate);
@@ -314,7 +380,7 @@
         });
       }
       document.getElementById("finalSection").classList.remove("hidden");
-      generateBarcodes(getValidatedSerials());
+      generateBarcodes(validated);
     }
 
     function generateBarcodes(serials) {
@@ -352,18 +418,14 @@
       document.getElementById("validationSection").classList.add("hidden");
       document.getElementById("finalSection").classList.add("hidden");
       document.getElementById("barcodeContainer").innerHTML = "";
-      document.getElementById("ocrText").textContent = "Analyse en cours...";
+      document.getElementById("ocrText").value = "Analyse en cours...";
       document.getElementById("successMsg").classList.add("hidden");
       
       try {
         document.getElementById("loading").classList.remove("hidden");
         const rawText = await performOCR(file);
         document.getElementById("loading").classList.add("hidden");
-        const cleanedText = cleanText(rawText);
-        document.getElementById("ocrText").textContent = cleanedText;
-        document.getElementById("results").classList.remove("hidden");
-        document.getElementById("successMsg").classList.remove("hidden");
-        const serials = extractSerialNumbers(cleanedText);
+        const serials = displayOCRResults(rawText);
         displayValidationList(serials);
         updateFinalSection();
       } catch (err) {
