@@ -102,7 +102,7 @@
 <body>
   <!-- En-tête avec logo Daher -->
   <header>
-    <!-- Remplacez l'URL par le logo officiel de Daher si nécessaire -->
+    <!-- Remplacez par le logo officiel de Daher si nécessaire -->
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Daher_logo.svg/2560px-Daher_logo.svg.png" alt="Logo Daher">
     <h1>OCR Daher</h1>
     <p>Extraction intelligente et apprentissage auto-améliorant des numéros de série</p>
@@ -228,13 +228,14 @@
       saveValidatedSerials(validated);
     }
 
-    // Appel à l'API OCR.space avec le bon type MIME
+    // Appeler l'API OCR.space en passant le type MIME du fichier
     async function callOcrSpaceApi(base64Data, fileType) {
+      const mimeType = fileType ? fileType : "image/png";
       const formData = new FormData();
       formData.append("apikey", ocrSpaceApiKey);
-      formData.append("language", "fre"); // français
+      formData.append("language", "fre"); // Français
       formData.append("isOverlayRequired", "false");
-      formData.append("file", base64toBlob(base64Data, fileType));
+      formData.append("file", base64toBlob(base64Data, mimeType));
       
       const response = await fetch("https://api.ocr.space/parse/image", {
         method: "POST",
@@ -258,6 +259,7 @@
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
       let found = [];
+      
       // 1) Extraction à partir d'un bloc "PIECES SERIALISEES N"
       let lines = text.split(/\r?\n/);
       let capturing = false;
@@ -275,6 +277,7 @@
           }
         }
       }
+      
       // 2) Autres patterns génériques
       const patterns = [
         /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
@@ -316,7 +319,6 @@
       return extractSerialNumbers(cleaned);
     }
 
-    // Affichage de la liste de validation/dévalidation
     function displayValidationList(serials) {
       const extractedList = document.getElementById("extractedList");
       extractedList.innerHTML = "";
@@ -356,7 +358,6 @@
       document.getElementById("validationSection").classList.remove("hidden");
     }
 
-    // Mise à jour de la section finale (numéros validés et codes-barres)
     function updateFinalSection() {
       const validated = getValidatedSerials();
       const validatedList = document.getElementById("validatedList");
@@ -383,7 +384,6 @@
       generateBarcodes(getValidatedSerials());
     }
 
-    // Générer les codes-barres pour les numéros validés
     function generateBarcodes(serials) {
       const barcodeContainer = document.getElementById("barcodeContainer");
       barcodeContainer.innerHTML = "";
@@ -408,14 +408,13 @@
       });
     }
 
-    // Gestion du bouton d'analyse
     document.getElementById("processBtn").addEventListener("click", async () => {
       const file = document.getElementById("imageInput").files[0];
       if (!file) {
         alert("Veuillez sélectionner une image.");
         return;
       }
-      // Réinitialiser les sections
+      // Réinitialiser l'interface
       document.getElementById("results").classList.add("hidden");
       document.getElementById("validationSection").classList.add("hidden");
       document.getElementById("finalSection").classList.add("hidden");
@@ -428,7 +427,8 @@
         const base64 = await fileToBase64(file);
         // Supprimer le préfixe "data:image/xxx;base64,"
         const base64Data = base64.split(",")[1];
-        const rawText = await callOcrSpaceApi(base64Data, file.type);
+        // Utiliser le type MIME du fichier, ou par défaut "image/png"
+        const rawText = await callOcrSpaceApi(base64Data, file.type || "image/png");
         document.getElementById("loading").classList.add("hidden");
         const cleanedText = cleanText(rawText);
         document.getElementById("ocrText").textContent = cleanedText;
