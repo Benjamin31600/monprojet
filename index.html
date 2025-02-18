@@ -4,24 +4,23 @@
   <meta charset="UTF-8">
   <title>OCR Daher - Extraction Intelligente</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tailwind CSS pour un design moderne -->
+  <!-- Tailwind CSS pour un design moderne et responsive -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-  <!-- JsBarcode pour les codes-barres -->
+  <!-- JsBarcode pour générer les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* Couleurs et style inspirés de Daher (ajustez si besoin) */
     :root {
-      --primary-color: #002855;  /* Exemple: bleu foncé Daher */
-      --accent-color: #FF5A5F;     /* Accent, vous pouvez ajuster */
+      --primary-color: #002855; /* Exemple de bleu Daher */
+      --accent-color: #FF5A5F;
     }
     body {
       background-color: #F7F9FC;
       font-family: 'Helvetica Neue', Arial, sans-serif;
-      color: #333;
       margin: 0;
       padding: 0;
+      color: #333;
     }
     header {
       background-color: var(--primary-color);
@@ -48,7 +47,7 @@
     .card {
       background-color: #fff;
       border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       padding: 1.5rem;
       margin-bottom: 1.5rem;
     }
@@ -59,6 +58,7 @@
       border-radius: 0.5rem;
       font-weight: 600;
       text-align: center;
+      cursor: pointer;
     }
     .btn-primary {
       background-color: var(--accent-color);
@@ -85,20 +85,22 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 0.5rem;
     }
     .barcode-card {
       background: #fff;
       border-radius: 0.5rem;
       padding: 1rem;
       text-align: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 0.5rem;
     }
   </style>
 </head>
 <body>
   <!-- En-tête avec logo Daher -->
   <header>
-    <!-- Remplacez l'URL ci-dessous par celle du logo officiel de Daher -->
+    <!-- Remplacez l'URL ci-dessous par le logo officiel de Daher -->
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Daher_logo.svg/2560px-Daher_logo.svg.png" alt="Logo Daher">
     <h1>OCR Daher</h1>
     <p>Extraction intelligente des numéros de série et génération de codes-barres</p>
@@ -128,14 +130,13 @@
       <p id="successMsg" class="mt-2 text-green-600 font-bold hidden">Analyse avec succès</p>
     </div>
 
-    <!-- Section de validation des numéros extraits -->
+    <!-- Section de validation/dévalidation -->
     <div id="validationSection" class="card hidden">
-      <h2 class="text-xl font-bold mb-2">Validez/Dévalidez vos numéros de série :</h2>
+      <h2 class="text-xl font-bold mb-2">Validez ou désélectionnez les numéros extraits :</h2>
       <ul id="extractedList" class="space-y-2"></ul>
-      <p class="text-sm text-gray-600 mt-2">Cliquez sur "Valider" pour sélectionner ou sur "Désélectionner" pour retirer.</p>
     </div>
 
-    <!-- Section finale : affichage uniquement des numéros validés et leurs codes-barres -->
+    <!-- Section finale : numéros validés et codes-barres -->
     <div id="finalSection" class="card hidden">
       <h2 class="text-xl font-bold mb-2">Mes numéros validés</h2>
       <ul id="validatedList" class="space-y-2"></ul>
@@ -145,8 +146,7 @@
 
   <script>
     /**********************************************************
-     * Pseudo-apprentissage local : stockage des numéros validés
-     * Les numéros validés sont stockés dans localStorage.
+     * Stockage local pour valider/dévalider et apprentissage
      **********************************************************/
     const STORAGE_KEY = "validatedSerials";
     function getValidatedSerials() {
@@ -172,35 +172,33 @@
      * Fonction OCR avec Tesseract.js
      **********************************************************/
     async function performOCR(file) {
-      const { data: { text } } = await Tesseract.recognize(file, 'fra', {
-        logger: m => console.log(m)
-      });
+      const { data: { text } } = await Tesseract.recognize(file, 'fra', { logger: m => console.log(m) });
       return text;
     }
 
     /**********************************************************
-     * Nettoyage du texte : suppression des accents et caractères non-ASCII
+     * Nettoyage du texte pour supprimer accents et caractères non-ASCII
      **********************************************************/
     function cleanText(text) {
-      // Supprimer les accents
       text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      // Conserver uniquement les caractères ASCII (codes 32 à 126)
       return text.replace(/[^\x20-\x7E]/g, "");
     }
 
     /**********************************************************
-     * Extraction intelligente des numéros de série
-     * On prend en compte plusieurs variantes de libellés
+     * Extraction des numéros de série avec diverses variantes
+     * Ici, nous ajoutons plusieurs regex pour couvrir plus de cas.
      **********************************************************/
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
       let found = [];
       const patterns = [
-        /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
-        /(?:SERIAL(?:S)?\s*NUMBER(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
-        /(?:S\/N\s*[:\-]?\s*)([\w\s\-]+)/gi,
-        /(?:PART\s*NUMBER\s*[:\-]?\s*)([\w\s\-]+)/gi,
-        /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi
+        /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
+        /(?:SERIAL(?:S)?\s*NUMBER(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
+        /(?:S\/N\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
+        /(?:PART\s*NUMBER\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
+        /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
+        // Un pattern générique pour les numéros commençant par SER suivi de chiffres/lettres
+        /(?:SER\s+([A-Z0-9\-]{3,}))/gi
       ];
       patterns.forEach(regex => {
         let match;
@@ -215,20 +213,16 @@
     }
 
     /**********************************************************
-     * Affichage des résultats et génération des codes-barres
+     * Affichage des résultats OCR et gestion de la validation/dévalidation
      **********************************************************/
-    function displayResults(rawText) {
+    function displayOCRResults(rawText) {
       const cleaned = cleanText(rawText);
-      document.getElementById("ocrText").value = cleaned;
+      document.getElementById("ocrText").textContent = cleaned;
       document.getElementById("results").classList.remove("hidden");
       document.getElementById("successMsg").classList.remove("hidden");
-
-      const serials = extractSerialNumbers(cleaned);
-      displayValidationList(serials);
-      updateFinalSection();
+      return extractSerialNumbers(cleaned);
     }
 
-    // Affiche la liste des numéros extraits avec options de validation/dévalidation
     function displayValidationList(serials) {
       const extractedList = document.getElementById("extractedList");
       extractedList.innerHTML = "";
@@ -237,10 +231,9 @@
       } else {
         serials.forEach(serial => {
           const li = document.createElement("li");
-          li.className = "serial-item flex justify-between items-center";
+          li.className = "serial-item";
           li.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
           const btnGroup = document.createElement("div");
-          // Si déjà validé, afficher bouton "Désélectionner"
           if (getValidatedSerials().includes(serial)) {
             const btnDeselect = document.createElement("button");
             btnDeselect.className = "bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
@@ -269,7 +262,6 @@
       document.getElementById("validationSection").classList.remove("hidden");
     }
 
-    // Met à jour la section finale pour n'afficher que les numéros validés et génère leurs codes-barres
     function updateFinalSection() {
       const validated = getValidatedSerials();
       const validatedList = document.getElementById("validatedList");
@@ -281,7 +273,6 @@
           const li = document.createElement("li");
           li.className = "serial-item";
           li.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
-          // Bouton pour retirer le numéro validé (dès qu'on retire, il disparaît de la section finale)
           const btnRemove = document.createElement("button");
           btnRemove.className = "ml-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
           btnRemove.textContent = "Retirer";
@@ -294,10 +285,9 @@
         });
       }
       document.getElementById("finalSection").classList.remove("hidden");
-      generateBarcodes(validated);
+      generateBarcodes(getValidatedSerials());
     }
 
-    // Génère les codes-barres pour les numéros validés
     function generateBarcodes(serials) {
       const barcodeContainer = document.getElementById("barcodeContainer");
       barcodeContainer.innerHTML = "";
@@ -315,16 +305,13 @@
         JsBarcode(svg, serial.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 2,      // Taille adaptée pour smartphone (ajustez si besoin)
-          height: 50,    // Hauteur réduite pour faciliter le flash
+          width: 2,
+          height: 50,
           displayValue: false
         });
       });
     }
 
-    /**********************************************************
-     * Gestion du bouton d'analyse
-     **********************************************************/
     document.getElementById("processBtn").addEventListener("click", async () => {
       const file = document.getElementById("imageInput").files[0];
       if (!file) {
@@ -336,13 +323,15 @@
       document.getElementById("validationSection").classList.add("hidden");
       document.getElementById("finalSection").classList.add("hidden");
       document.getElementById("barcodeContainer").innerHTML = "";
-      document.getElementById("ocrText").value = "Analyse en cours...";
+      document.getElementById("ocrText").textContent = "Analyse en cours...";
       document.getElementById("successMsg").classList.add("hidden");
       
       try {
+        document.getElementById("loading").classList.remove("hidden");
         const rawText = await performOCR(file);
+        document.getElementById("loading").classList.add("hidden");
         const cleanedText = cleanText(rawText);
-        document.getElementById("ocrText").value = cleanedText;
+        document.getElementById("ocrText").textContent = cleanedText;
         document.getElementById("results").classList.remove("hidden");
         document.getElementById("successMsg").classList.remove("hidden");
         const serials = extractSerialNumbers(cleanedText);
@@ -350,6 +339,7 @@
         updateFinalSection();
       } catch (err) {
         console.error("Erreur détaillée :", err);
+        document.getElementById("loading").classList.add("hidden");
         alert("Une erreur est survenue lors de l'analyse.");
       }
     });
