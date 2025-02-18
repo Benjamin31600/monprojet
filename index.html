@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <title>Bienvenue sur OCR Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tailwind CSS pour un design moderne -->
+  <!-- Tailwind CSS pour un design moderne et responsive -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <!-- JsBarcode pour générer les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* Interface moderne inspirée par Airbnb */
+    /* Interface moderne inspirée d’Airbnb */
     body {
       background-color: #F7F9FC;
       font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -19,7 +19,7 @@
     }
     header {
       background-color: #FF5A5F;
-      color: #fff;
+      color: white;
       padding: 1.5rem;
       text-align: center;
     }
@@ -40,7 +40,7 @@
       padding: 1rem;
     }
     .card {
-      background-color: #fff;
+      background-color: white;
       border-radius: 0.75rem;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       padding: 1.5rem;
@@ -56,7 +56,7 @@
     }
     .btn-primary {
       background-color: #FF5A5F;
-      color: #fff;
+      color: white;
     }
     .btn-primary:hover {
       background-color: #E14B4F;
@@ -81,7 +81,7 @@
       align-items: center;
     }
     .barcode-card {
-      background: #fff;
+      background: white;
       border-radius: 0.5rem;
       padding: 1rem;
       text-align: center;
@@ -90,14 +90,14 @@
   </style>
 </head>
 <body>
-  <!-- En-tête de bienvenue -->
+  <!-- En-tête -->
   <header>
     <h1>Bienvenue sur OCR Pro</h1>
     <p>Extraction intelligente des numéros de série et génération de codes-barres</p>
   </header>
 
   <div class="container">
-    <!-- Section d'upload -->
+    <!-- Zone d'upload -->
     <div class="card">
       <label class="block mb-2 font-semibold">Sélectionnez ou prenez une photo :</label>
       <input type="file" id="imageInput" class="w-full mb-4" accept="image/*;capture=camera">
@@ -113,40 +113,51 @@
       <p class="text-blue-600 font-semibold">Analyse en cours...</p>
     </div>
 
-    <!-- Résultat OCR affiché -->
+    <!-- Résultat OCR -->
     <div id="results" class="card hidden">
       <h2 class="text-xl font-bold mb-2">Texte OCR nettoyé :</h2>
       <textarea id="ocrText" rows="6" class="w-full p-2 border border-gray-300 rounded bg-gray-50" readonly></textarea>
+      <p id="successMsg" class="mt-2 text-green-600 font-bold hidden">Analyse avec succès</p>
     </div>
 
-    <!-- Section d'extraction des numéros de série -->
-    <div id="serialSection" class="card hidden">
-      <h2 class="text-xl font-bold mb-2">Serial Numbers détectés :</h2>
-      <ul id="serialList" class="space-y-2"></ul>
+    <!-- Section de validation des numéros extraits -->
+    <div id="validationSection" class="card hidden">
+      <h2 class="text-xl font-bold mb-2">Validez les numéros de série :</h2>
+      <ul id="extractedList" class="space-y-2"></ul>
+      <button id="showValidBtn" class="btn btn-primary mt-4">Afficher uniquement les validés</button>
     </div>
 
-    <!-- Zone de codes-barres -->
-    <div id="barcodeArea" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    <!-- Section finale : numéros validés et codes-barres -->
+    <div id="finalSection" class="card hidden">
+      <h2 class="text-xl font-bold mb-2">Mes numéros de série validés</h2>
+      <ul id="validatedList" class="space-y-2"></ul>
+      <div id="barcodeContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4"></div>
+    </div>
   </div>
 
   <script>
     /**********************************************************
      * Pseudo-apprentissage local : stockage des numéros validés
      **********************************************************/
-    const STORAGE_KEY = "confirmedSerialNumbers";
-    function getConfirmedSerialNumbers() {
+    const STORAGE_KEY = "validatedSerials";
+    function getValidatedSerials() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     }
-    function addConfirmedSerialNumber(num) {
-      const confirmed = getConfirmedSerialNumbers();
-      if (!confirmed.includes(num)) {
-        confirmed.push(num);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(confirmed));
+    function addValidatedSerial(serial) {
+      let validated = getValidatedSerials();
+      if (!validated.includes(serial)) {
+        validated.push(serial);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
       }
+    }
+    function removeValidatedSerial(serial) {
+      let validated = getValidatedSerials();
+      validated = validated.filter(s => s !== serial);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
     }
 
     /**********************************************************
-     * Fonction OCR avec Tesseract.js
+     * OCR avec Tesseract.js
      **********************************************************/
     async function performOCR(file) {
       const { data: { text } } = await Tesseract.recognize(file, 'fra', {
@@ -156,9 +167,7 @@
     }
 
     /**********************************************************
-     * Nettoyage du texte
-     * - Supprimer les accents et caractères spéciaux
-     * - Conserver uniquement les caractères ASCII
+     * Nettoyage du texte : supprimer accents et caractères non-ASCII
      **********************************************************/
     function cleanText(text) {
       // Supprimer les accents
@@ -169,42 +178,27 @@
 
     /**********************************************************
      * Extraction intelligente des numéros de série
-     * Prend en compte plusieurs mots-clés et positions (à côté ou en dessous)
+     * Prend en compte diverses variantes (ex. "NUMERO DE SERIE", "SERIAL NUMBER", "S/N", "PART NUMBER", "N° SERIE")
      **********************************************************/
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
       let found = [];
-
-      // Liste de motifs couvrant plusieurs variantes
       const patterns = [
-        /(?:NUMERO(S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
-        /(?:SERIAL\s*NUMBER(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
+        /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
+        /(?:SERIAL(?:S)?\s*NUMBER(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi,
         /(?:S\/N\s*[:\-]?\s*)([\w\s\-]+)/gi,
         /(?:PART\s*NUMBER\s*[:\-]?\s*)([\w\s\-]+)/gi,
         /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([\w\s\-]+)/gi
       ];
-
       patterns.forEach(regex => {
         let match;
         while ((match = regex.exec(text)) !== null) {
-          let token = match[2] ? match[2] : match[0];
-          token = token.trim();
-          // Vérifier qu'il y a au moins 3 caractères (sans espaces)
+          let token = match[1] ? match[1].trim() : match[0].trim();
           if (token.replace(/\s+/g, "").length >= 3 && !found.includes(token)) {
             found.push(token);
           }
         }
       });
-
-      // Ajout des numéros validés pour priorisation
-      const confirmed = getConfirmedSerialNumbers();
-      confirmed.forEach(num => {
-        if (!found.includes(num)) {
-          found.unshift(num);
-        }
-      });
-      // Tri : les numéros validés en premier
-      found.sort((a, b) => confirmed.includes(b) - confirmed.includes(a));
       return found;
     }
 
@@ -215,69 +209,98 @@
       const cleaned = cleanText(rawText);
       document.getElementById("ocrText").value = cleaned;
       document.getElementById("results").classList.remove("hidden");
+      document.getElementById("successMsg").classList.remove("hidden");
 
-      // Extraction des numéros de série
-      const serialNumbers = extractSerialNumbers(cleaned);
-      const serialList = document.getElementById("serialList");
-      serialList.innerHTML = "";
-      if (serialNumbers.length === 0) {
-        serialList.innerHTML = "<li class='text-gray-600'>Aucun numéro de série détecté.</li>";
+      const serials = extractSerialNumbers(cleaned);
+      displayValidationList(serials);
+    }
+
+    // Affiche la liste des numéros extraits avec options de validation
+    function displayValidationList(serials) {
+      const extractedList = document.getElementById("extractedList");
+      extractedList.innerHTML = "";
+      if (serials.length === 0) {
+        extractedList.innerHTML = "<li class='text-gray-600'>Aucun numéro détecté.</li>";
       } else {
-        serialNumbers.forEach(num => {
+        serials.forEach(serial => {
           const li = document.createElement("li");
-          li.className = "serial-item";
-          li.textContent = `${num} (LEN: ${num.replace(/\s+/g, "").length})`;
-          
-          // Boutons de validation pour le pseudo-apprentissage
+          li.className = "serial-item flex justify-between items-center";
+          li.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
           const btnGroup = document.createElement("div");
-          if (getConfirmedSerialNumbers().includes(num)) {
-            const badge = document.createElement("span");
-            badge.className = "bg-green-500 text-white text-xs font-bold px-2 py-1 rounded";
-            badge.textContent = "Validé";
-            btnGroup.appendChild(badge);
-          } else {
-            const btnValidate = document.createElement("button");
-            btnValidate.className = "feedback-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-2 py-1 rounded mr-2";
-            btnValidate.textContent = "Valider";
-            btnValidate.addEventListener("click", () => {
-              addConfirmedSerialNumber(num);
-              btnGroup.innerHTML = '<span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">Validé</span>';
-            });
-            const btnReject = document.createElement("button");
-            btnReject.className = "feedback-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
-            btnReject.textContent = "Rejeter";
-            btnReject.addEventListener("click", () => {
-              li.remove();
-            });
-            btnGroup.appendChild(btnValidate);
-            btnGroup.appendChild(btnReject);
-          }
+          // Bouton de validation
+          const btnValidate = document.createElement("button");
+          btnValidate.className = "bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-2 py-1 rounded mr-2";
+          btnValidate.textContent = "Valider";
+          btnValidate.addEventListener("click", () => {
+            addValidatedSerial(serial);
+            li.style.display = "none";
+            updateFinalSection();
+          });
+          // Bouton de rejet
+          const btnReject = document.createElement("button");
+          btnReject.className = "bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
+          btnReject.textContent = "Rejeter";
+          btnReject.addEventListener("click", () => {
+            li.remove();
+          });
+          btnGroup.appendChild(btnValidate);
+          btnGroup.appendChild(btnReject);
           li.appendChild(btnGroup);
-          serialList.appendChild(li);
+          extractedList.appendChild(li);
         });
       }
-      document.getElementById("serialSection").classList.remove("hidden");
+      document.getElementById("validationSection").classList.remove("hidden");
+    }
 
-      // Génération des codes-barres pour chaque numéro extrait
-      const barcodeArea = document.getElementById("barcodeArea");
-      barcodeArea.innerHTML = "";
-      serialNumbers.forEach((num, index) => {
+    // Mise à jour de la section finale affichant uniquement les numéros validés
+    function updateFinalSection() {
+      const validated = getValidatedSerials();
+      const validatedList = document.getElementById("validatedList");
+      validatedList.innerHTML = "";
+      if (validated.length === 0) {
+        validatedList.innerHTML = "<li class='text-gray-600'>Aucun numéro validé.</li>";
+      } else {
+        validated.forEach(serial => {
+          const li = document.createElement("li");
+          li.className = "serial-item";
+          li.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
+          // Bouton pour retirer le numéro validé
+          const btnRemove = document.createElement("button");
+          btnRemove.className = "ml-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded";
+          btnRemove.textContent = "Retirer";
+          btnRemove.addEventListener("click", () => {
+            removeValidatedSerial(serial);
+            updateFinalSection();
+          });
+          li.appendChild(btnRemove);
+          validatedList.appendChild(li);
+        });
+      }
+      document.getElementById("finalSection").classList.remove("hidden");
+      // Générer les codes-barres pour les numéros validés
+      generateBarcodes(validated);
+    }
+
+    // Générer les codes-barres avec JsBarcode
+    function generateBarcodes(serials) {
+      const barcodeContainer = document.getElementById("barcodeContainer");
+      barcodeContainer.innerHTML = "";
+      serials.forEach((serial, index) => {
         const div = document.createElement("div");
         div.className = "barcode-card";
         const title = document.createElement("div");
         title.className = "barcode-title";
-        title.textContent = `${num} (LEN: ${num.replace(/\s+/g, "").length})`;
+        title.textContent = serial + " (LEN: " + serial.replace(/\s+/g, "").length + ")";
         div.appendChild(title);
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode-" + index;
         div.appendChild(svg);
-        barcodeArea.appendChild(div);
-        // Génération du code-barres avec JsBarcode
-        JsBarcode(svg, num.replace(/\s+/g, ""), {
+        barcodeContainer.appendChild(div);
+        JsBarcode(svg, serial.replace(/\s+/g, ""), {
           format: "CODE128",
           lineColor: "#000",
-          width: 2,      // Taille ajustée pour être scannable sur smartphone
-          height: 50,    // Hauteur plus petite
+          width: 2,      // Ajusté pour être compatible smartphone
+          height: 50,    // Hauteur réduite pour le flash
           displayValue: false
         });
       });
@@ -292,19 +315,30 @@
         alert("Veuillez sélectionner une image.");
         return;
       }
-      // Affichage de l'indicateur de chargement
+      // Masquer les sections de résultats précédents
       document.getElementById("results").classList.add("hidden");
-      document.getElementById("serialSection").classList.add("hidden");
-      document.getElementById("barcodeArea").innerHTML = "";
+      document.getElementById("validationSection").classList.add("hidden");
+      document.getElementById("finalSection").classList.add("hidden");
+      document.getElementById("barcodeContainer").innerHTML = "";
       document.getElementById("ocrText").value = "Analyse en cours...";
       
       try {
-        const ocrResult = await performOCR(file);
-        displayResults(ocrResult);
+        const rawText = await performOCR(file);
+        document.getElementById("ocrText").value = cleanText(rawText);
+        document.getElementById("results").classList.remove("hidden");
+        const serials = extractSerialNumbers(cleanText(rawText));
+        displayValidationList(serials);
+        updateFinalSection();
       } catch (err) {
         console.error("Erreur détaillée :", err);
         alert("Une erreur est survenue lors de l'analyse.");
       }
+    });
+
+    // Optionnel : bouton pour n'afficher que les numéros validés (vous pouvez le laisser ou le modifier)
+    document.getElementById("showValidBtn").addEventListener("click", () => {
+      document.getElementById("validationSection").classList.add("hidden");
+      updateFinalSection();
     });
   </script>
 </body>
