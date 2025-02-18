@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Tailwind CSS pour un design moderne et responsive -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Tesseract.js pour l'OCR (côté client) -->
+  <!-- Tesseract.js pour l'OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <!-- JsBarcode pour générer les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -102,7 +102,7 @@
 <body>
   <!-- En-tête avec logo Daher -->
   <header>
-    <!-- Remplacez l'URL ci-dessous par le logo officiel de Daher si nécessaire -->
+    <!-- Remplacez l'URL par le logo officiel de Daher si nécessaire -->
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Daher_logo.svg/2560px-Daher_logo.svg.png" alt="Logo Daher">
     <h1>OCR Daher</h1>
     <p>Extraction intelligente et apprentissage auto-améliorant des numéros de série</p>
@@ -147,10 +147,31 @@
   </div>
 
   <script>
-    // Intégration de votre clé API OCR.space
+    // Clé API OCR.space intégrée
     const ocrSpaceApiKey = "K85343059688957";
 
-    // Prétraitement d'image avec OpenCV.js pour améliorer la qualité OCR
+    // Fonction pour convertir un fichier en base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Convertir une chaîne base64 (sans préfixe) en Blob, en utilisant le type MIME réel
+    function base64toBlob(base64, type) {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new Blob([byteArray], { type });
+    }
+
+    // Prétraitement d'image avec OpenCV.js
     async function preprocessImage(file) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -186,7 +207,7 @@
       });
     }
 
-    // Stockage local pour simuler un apprentissage (valider/dévalider)
+    // Stockage local pour simuler un apprentissage (validation/dévalidation)
     const STORAGE_KEY = "validatedSerials";
     function getValidatedSerials() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -207,14 +228,14 @@
       saveValidatedSerials(validated);
     }
 
-    // Utilisation de l'API OCR.space
-    async function callOcrSpaceApi(base64Image) {
+    // Appel à l'API OCR.space avec le bon type MIME
+    async function callOcrSpaceApi(base64Data, fileType) {
       const formData = new FormData();
       formData.append("apikey", ocrSpaceApiKey);
-      formData.append("language", "fre"); // "fre" pour français
+      formData.append("language", "fre"); // français
       formData.append("isOverlayRequired", "false");
-      formData.append("file", base64toBlob(base64Image, "image/png"));
-
+      formData.append("file", base64toBlob(base64Data, fileType));
+      
       const response = await fetch("https://api.ocr.space/parse/image", {
         method: "POST",
         body: formData
@@ -226,31 +247,10 @@
       return result.ParsedResults[0].ParsedText;
     }
 
-    // Conversion de base64 en Blob
-    function base64toBlob(base64, type) {
-      const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      return new Blob([byteArray], { type });
-    }
-
-    // Convertir un fichier en base64
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
     // Nettoyage du texte OCR
     function cleanText(text) {
       text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      text = text.replace(/\uFFFD/g, "");
+      text = text.replace(/\uFFFD/g, ""); // supprimer les losanges
       return text;
     }
 
@@ -258,8 +258,7 @@
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
       let found = [];
-      
-      // 1) Capture les numéros après "PIECES SERIALISEES N" si présent
+      // 1) Extraction à partir d'un bloc "PIECES SERIALISEES N"
       let lines = text.split(/\r?\n/);
       let capturing = false;
       for (let line of lines) {
@@ -276,15 +275,14 @@
           }
         }
       }
-      
-      // 2) Regex supplémentaires pour d'autres variantes
+      // 2) Autres patterns génériques
       const patterns = [
         /(?:NUMERO(?:S)?\s*DE\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:SERIAL(?:S)?\s*NUMBER(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:S\/N\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:PART\s*NUMBER\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
-        /(?:SER\s+([A-Z0-9\-]{3,}))/gi
+        /(?:\bSER\b\s+([A-Z0-9\-]{3,}))/gi
       ];
       patterns.forEach(regex => {
         let match;
@@ -298,7 +296,7 @@
       return found;
     }
 
-    // Détection de numéros sur la même ligne (ex : "SER CHT 1521 SER CHT 1522")
+    // Détection de "SER" sur la même ligne
     function detectSerNumbers(line) {
       let results = [];
       let regex = /\bSER\s+([A-Z0-9\-]{3,})/gi;
@@ -309,7 +307,7 @@
       return results;
     }
 
-    // Affichage des résultats OCR et extraction des numéros
+    // Affichage des résultats OCR et extraction
     function displayOCRResults(rawText) {
       const cleaned = cleanText(rawText);
       document.getElementById("ocrText").textContent = cleaned;
@@ -318,6 +316,7 @@
       return extractSerialNumbers(cleaned);
     }
 
+    // Affichage de la liste de validation/dévalidation
     function displayValidationList(serials) {
       const extractedList = document.getElementById("extractedList");
       extractedList.innerHTML = "";
@@ -335,7 +334,7 @@
             btnDeselect.textContent = "Désélectionner";
             btnDeselect.addEventListener("click", () => {
               removeValidatedSerial(serial);
-              li.remove();
+              li.style.display = "none";
               updateFinalSection();
             });
             btnGroup.appendChild(btnDeselect);
@@ -357,6 +356,7 @@
       document.getElementById("validationSection").classList.remove("hidden");
     }
 
+    // Mise à jour de la section finale (numéros validés et codes-barres)
     function updateFinalSection() {
       const validated = getValidatedSerials();
       const validatedList = document.getElementById("validatedList");
@@ -383,6 +383,7 @@
       generateBarcodes(getValidatedSerials());
     }
 
+    // Générer les codes-barres pour les numéros validés
     function generateBarcodes(serials) {
       const barcodeContainer = document.getElementById("barcodeContainer");
       barcodeContainer.innerHTML = "";
@@ -407,13 +408,14 @@
       });
     }
 
+    // Gestion du bouton d'analyse
     document.getElementById("processBtn").addEventListener("click", async () => {
       const file = document.getElementById("imageInput").files[0];
       if (!file) {
         alert("Veuillez sélectionner une image.");
         return;
       }
-      // Réinitialiser l'interface
+      // Réinitialiser les sections
       document.getElementById("results").classList.add("hidden");
       document.getElementById("validationSection").classList.add("hidden");
       document.getElementById("finalSection").classList.add("hidden");
@@ -424,9 +426,9 @@
       try {
         document.getElementById("loading").classList.remove("hidden");
         const base64 = await fileToBase64(file);
-        // On retire le préfixe "data:image/png;base64," ou similaire
+        // Supprimer le préfixe "data:image/xxx;base64,"
         const base64Data = base64.split(",")[1];
-        const rawText = await callOcrSpaceApi(base64Data);
+        const rawText = await callOcrSpaceApi(base64Data, file.type);
         document.getElementById("loading").classList.add("hidden");
         const cleanedText = cleanText(rawText);
         document.getElementById("ocrText").textContent = cleanedText;
@@ -441,36 +443,6 @@
         alert("Une erreur est survenue : " + err.message);
       }
     });
-
-    // Fonction pour appeler l'API OCR.space
-    async function callOcrSpaceApi(base64Data) {
-      const formData = new FormData();
-      formData.append("apikey", ocrSpaceApiKey);
-      formData.append("language", "fre"); // "fre" pour français
-      formData.append("isOverlayRequired", "false");
-      // Convertir la base64 en Blob et l'ajouter
-      formData.append("file", base64toBlob(base64Data, "image/png"));
-      
-      const response = await fetch("https://api.ocr.space/parse/image", {
-        method: "POST",
-        body: formData
-      });
-      const result = await response.json();
-      if (result.IsErroredOnProcessing) {
-        throw new Error("Erreur OCR.space : " + result.ErrorMessage);
-      }
-      return result.ParsedResults[0].ParsedText;
-    }
-
-    // Convertir un fichier en base64
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
   </script>
 </body>
 </html>
