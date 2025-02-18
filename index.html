@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>OCR Daher - Extraction Intelligente</title>
+  <title>OCR Daher - Solution Améliorée</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Tailwind CSS pour un design moderne et responsive -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,17 +10,19 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <!-- JsBarcode pour générer les codes-barres -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- OpenCV.js pour le prétraitement d'image -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
   <style>
     :root {
-      --primary-color: #002855; /* Exemple de bleu Daher */
+      --primary-color: #002855; /* Bleu Daher */
       --accent-color: #FF5A5F;
     }
     body {
       background-color: #F7F9FC;
       font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #333;
       margin: 0;
       padding: 0;
-      color: #333;
     }
     header {
       background-color: var(--primary-color);
@@ -103,7 +105,7 @@
     <!-- Remplacez l'URL ci-dessous par le logo officiel de Daher -->
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Daher_logo.svg/2560px-Daher_logo.svg.png" alt="Logo Daher">
     <h1>OCR Daher</h1>
-    <p>Extraction intelligente des numéros de série et génération de codes-barres</p>
+    <p>Extraction intelligente et apprentissage auto-améliorant des numéros de série</p>
   </header>
 
   <div class="container">
@@ -136,7 +138,7 @@
       <ul id="extractedList" class="space-y-2"></ul>
     </div>
 
-    <!-- Section finale : numéros validés et codes-barres -->
+    <!-- Section finale : affichage des numéros validés et codes-barres -->
     <div id="finalSection" class="card hidden">
       <h2 class="text-xl font-bold mb-2">Mes numéros validés</h2>
       <ul id="validatedList" class="space-y-2"></ul>
@@ -145,9 +147,42 @@
   </div>
 
   <script>
-    /**********************************************************
-     * Stockage local pour valider/dévalider et apprentissage
-     **********************************************************/
+    // Prétraitement d'image avec OpenCV.js (si chargé)
+    async function preprocessImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          if (typeof cv !== "undefined") {
+            try {
+              let src = cv.imread(canvas);
+              let gray = new cv.Mat();
+              cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+              let thresh = new cv.Mat();
+              cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 15);
+              cv.imshow(canvas, thresh);
+              src.delete(); gray.delete(); thresh.delete();
+              resolve(canvas.toDataURL("image/png"));
+            } catch (e) {
+              console.error("OpenCV Error:", e);
+              resolve(canvas.toDataURL("image/png"));
+            }
+          } else {
+            resolve(canvas.toDataURL("image/png"));
+          }
+        };
+        img.onerror = reject;
+        const reader = new FileReader();
+        reader.onload = (evt) => { img.src = evt.target.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Stockage local pour simuler un apprentissage
     const STORAGE_KEY = "validatedSerials";
     function getValidatedSerials() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -168,26 +203,22 @@
       saveValidatedSerials(validated);
     }
 
-    /**********************************************************
-     * Fonction OCR avec Tesseract.js
-     **********************************************************/
+    // OCR avec Tesseract.js (après prétraitement)
     async function performOCR(file) {
-      const { data: { text } } = await Tesseract.recognize(file, 'fra', { logger: m => console.log(m) });
+      const preprocessed = await preprocessImage(file);
+      const { data: { text } } = await Tesseract.recognize(preprocessed, 'fra', { logger: m => console.log(m) });
       return text;
     }
 
-    /**********************************************************
-     * Nettoyage du texte pour supprimer accents et caractères non-ASCII
-     **********************************************************/
+    // Nettoyage du texte (supprimer accents et remplacer U+FFFD)
     function cleanText(text) {
       text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return text.replace(/[^\x20-\x7E]/g, "");
+      // Remplacer les caractères de remplacement (losanges)
+      text = text.replace(/\uFFFD/g, "");
+      return text;
     }
 
-    /**********************************************************
-     * Extraction des numéros de série avec diverses variantes
-     * Ici, nous ajoutons plusieurs regex pour couvrir plus de cas.
-     **********************************************************/
+    // Extraction intelligente des numéros de série (ajustez les regex selon vos exemples)
     function extractSerialNumbers(text) {
       text = text.toUpperCase();
       let found = [];
@@ -197,7 +228,7 @@
         /(?:S\/N\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:PART\s*NUMBER\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
         /(?:N°\s*SERIE(?:S)?\s*[:\-]?\s*)([A-Z0-9\s\-]+)/gi,
-        // Un pattern générique pour les numéros commençant par SER suivi de chiffres/lettres
+        // Pattern générique pour "SER" suivi de chiffres/lettres (optionnel)
         /(?:SER\s+([A-Z0-9\-]{3,}))/gi
       ];
       patterns.forEach(regex => {
@@ -212,9 +243,7 @@
       return found;
     }
 
-    /**********************************************************
-     * Affichage des résultats OCR et gestion de la validation/dévalidation
-     **********************************************************/
+    // Affichage des résultats OCR et gestion de la validation/dévalidation
     function displayOCRResults(rawText) {
       const cleaned = cleanText(rawText);
       document.getElementById("ocrText").textContent = cleaned;
