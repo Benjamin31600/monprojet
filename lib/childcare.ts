@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import path from "node:path";
+import path from "path";
 
 export type ChildcareRecord = {
   id: string;
@@ -55,27 +55,33 @@ export function matchesType(record: ChildcareRecord, filter: string) {
   return true;
 }
 
-/**
- * Rank results by user intent without inventing availability.
- * The score is deliberately explainable: exact postal code > postal prefix > exact city > partial city > type.
- */
-export function childcareSearchScore(record: ChildcareRecord, query = "", type = "") {
+export function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function childcareSearchScore(record: ChildcareRecord, query = "", type = "", userLat?: number, userLon?: number) {
   const needle = normalize(query).replace(/\s+/g, "");
   const city = normalize(record.city).replace(/\s+/g, "");
   const postal = normalize(record.postalCode).replace(/\s+/g, "");
   let score = 0;
-
-  if (!needle) score += 10;
-  else if (postal === needle) score += 100;
-  else if (postal.startsWith(needle) && needle.length >= 3) score += 85;
-  else if (city === needle) score += 80;
-  else if (city.includes(needle)) score += 55;
-  else if (postal.includes(needle)) score += 40;
-
+  if (needle) {
+    if (postal === needle) score += 100;
+    else if (postal.startsWith(needle) && needle.length >= 3) score += 85;
+    else if (city === needle) score += 80;
+    else if (city.includes(needle)) score += 55;
+    else if (postal.includes(needle)) score += 40;
+  } else score += 10;
+  if (userLat !== undefined && userLon !== undefined && record.latitude !== null && record.longitude !== null) {
+    score += Math.max(0, 80 - distanceKm(userLat, userLon, record.latitude, record.longitude) * 8);
+  }
   if (type && matchesType(record, type)) score += 25;
   return score;
 }
 
-export function rankChildcare(records: ChildcareRecord[], query = "", type = "") {
-  return [...records].sort((a, b) => childcareSearchScore(b, query, type) - childcareSearchScore(a, query, type));
+export function rankChildcare(records: ChildcareRecord[], query = "", type = "", userLat?: number, userLon?: number) {
+  return [...records].sort((a, b) => childcareSearchScore(b, query, type, userLat, userLon) - childcareSearchScore(a, query, type, userLat, userLon));
 }
