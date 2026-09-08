@@ -1,0 +1,3 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = { title: "CPE au Québec", description: "Comprendre et rechercher les centres de la petite enfance (CPE) au Québec." };
+export default function CpePage() { return <div className="page"><div className="breadcrumbs"><a href="/">Accueil</a> / CPE</div><h1>CPE au Québec</h1><p>Recherchez des centres de la petite enfance selon votre secteur et les besoins de votre enfant.</p><div className="card"><h2>Une recherche pensée pour les parents</h2><p className="muted">Nous construisons un moteur local qui met l’accent sur la pertinence, la fraîcheur des informations et la simplicité du parcours.</p></div></div>; }
