@@ -1,6 +1,6 @@
 export const site = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Trouver une garde",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.ca",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://monprojetgarde.vercel.app",
   description:
     "Trouvez une place en garderie, CPE, milieu familial ou une solution de garde près de chez vous.",
   locale: "fr_CA",
