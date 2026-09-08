@@ -2,8 +2,11 @@ export const site = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Trouver une garde",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://monprojetgarde.vercel.app",
   description:
-    "Trouvez une place en garderie, CPE, milieu familial ou une solution de garde près de chez vous.",
+    "Trouvez une garderie, un CPE, un service de garde en milieu familial ou une solution de garde près de chez vous au Québec.",
   locale: "fr_CA",
+  country: "CA",
+  region: "Quebec",
+  currency: "CAD",
 };
 
 export const cities = [
