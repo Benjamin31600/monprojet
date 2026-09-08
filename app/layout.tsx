@@ -5,26 +5,25 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} | Garderies et services de garde au Québec`,
-    template: `%s | ${site.name}`,
+    default: "MyCoco | Garderies, CPE et solutions de garde au Québec",
+    template: "%s | MyCoco",
   },
   description: site.description,
-  applicationName: site.name,
+  applicationName: "MyCoco",
   category: "childcare",
-  alternates: { canonical: "/fr" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "fr_CA",
-    siteName: site.name,
-    title: `${site.name} | Garderies et services de garde au Québec`,
+    siteName: "MyCoco",
+    title: "MyCoco | Garderies, CPE et solutions de garde au Québec",
     description: site.description,
     url: site.url,
     countryName: "Canada",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} | Garderies et services de garde au Québec`,
+    title: "MyCoco | Garderies, CPE et solutions de garde au Québec",
     description: site.description,
   },
 };
@@ -35,7 +34,8 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: site.name,
+    name: "MyCoco",
+    alternateName: "MyCoco Childcare",
     url: site.url,
     description: site.description,
     inLanguage: ["fr-CA", "en-CA"],
