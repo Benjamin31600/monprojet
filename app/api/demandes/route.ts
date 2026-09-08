@@ -7,7 +7,7 @@ const demandSchema = z.object({
   ville: z.string().trim().min(2).max(120),
   age: z.enum(["0-18", "18-36", "3-5", "5+"]),
   type: z.string().trim().max(80).default(""),
-  debut: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional().or(z.literal("")),
+  debut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
 });
 
 export async function POST(request: NextRequest) {
