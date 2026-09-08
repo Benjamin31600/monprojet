@@ -52,3 +52,28 @@ export function matchesType(record: ChildcareRecord, filter: string) {
   if (filter === "non-subventionnee") return n.includes("non subvention") || n.includes("non-subvention");
   return true;
 }
+
+/**
+ * Rank results by user intent without inventing availability.
+ * The score is deliberately explainable: exact postal prefix > exact city > partial city > type.
+ */
+export function childcareSearchScore(record: ChildcareRecord, query = "", type = "") {
+  const needle = normalize(query).replace(/\s+/g, "");
+  const city = normalize(record.city).replace(/\s+/g, "");
+  const postal = normalize(record.postalCode).replace(/\s+/g, "");
+  let score = 0;
+
+  if (!needle) score += 10;
+  else if (postal === needle) score += 100;
+  else if (postal.startsWith(needle) && needle.length >= 3) score += 85;
+  else if (city === needle) score += 80;
+  else if (city.includes(needle)) score += 55;
+  else if (postal.includes(needle)) score += 40;
+
+  if (type && matchesType(record, type)) score += 25;
+  return score;
+}
+
+export function rankChildcare(records: ChildcareRecord[], query = "", type = "") {
+  return [...records].sort((a, b) => childcareSearchScore(b, query, type) - childcareSearchScore(a, query, type));
+}
