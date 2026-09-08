@@ -19,26 +19,13 @@ export async function saveParentDemand(demand: ParentDemand) {
   const sql = getSql();
   if (!sql) return { saved: false, reason: "database_not_configured" as const };
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS parent_demands (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      locale TEXT NOT NULL,
-      city_or_postal TEXT NOT NULL,
-      age_range TEXT NOT NULL,
-      childcare_type TEXT,
-      desired_start_date DATE,
-      source TEXT,
-      status TEXT NOT NULL DEFAULT 'new',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `;
-
-  await sql`
+  const rows = await sql`
     INSERT INTO parent_demands
       (locale, city_or_postal, age_range, childcare_type, desired_start_date, source)
     VALUES
-      (${demand.locale}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || null}, ${demand.desiredStartDate || null}, ${demand.source})
+      (${demand.locale}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || ""}, ${demand.desiredStartDate || null}, ${demand.source})
+    RETURNING id
   `;
 
-  return { saved: true as const };
+  return { saved: true as const, id: rows[0]?.id as string | undefined };
 }
