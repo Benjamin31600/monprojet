@@ -10,6 +10,8 @@ export type ChildcareRecord = {
   address: string;
   postalCode: string;
   phone: string;
+  latitude: number | null;
+  longitude: number | null;
   source: string;
   sourceUpdatedAt: string;
 };
@@ -55,7 +57,7 @@ export function matchesType(record: ChildcareRecord, filter: string) {
 
 /**
  * Rank results by user intent without inventing availability.
- * The score is deliberately explainable: exact postal prefix > exact city > partial city > type.
+ * The score is deliberately explainable: exact postal code > postal prefix > exact city > partial city > type.
  */
 export function childcareSearchScore(record: ChildcareRecord, query = "", type = "") {
   const needle = normalize(query).replace(/\s+/g, "");
