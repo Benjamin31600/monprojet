@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getChildcareData, matchesType, normalize, typeLabel } from "@/lib/childcare";
+import { getChildcareData, matchesType, normalize, rankChildcare, typeLabel } from "@/lib/childcare";
 import { isLocale, type Locale, locales } from "@/lib/i18n";
 import { site } from "@/lib/site";
 
@@ -31,7 +31,8 @@ export default async function GarderiesPage({ params, searchParams }: { params: 
   const type = value(p, "type");
   const data = await getChildcareData();
   const cityNeedle = normalize(ville);
-  const records = data.records.filter(record => (!cityNeedle || normalize(record.city).includes(cityNeedle) || normalize(record.postalCode).includes(cityNeedle)) && matchesType(record, type));
+  const filtered = data.records.filter(record => (!cityNeedle || normalize(record.city).includes(cityNeedle) || normalize(record.postalCode).includes(cityNeedle)) && matchesType(record, type));
+  const records = rankChildcare(filtered, ville, type);
   const visible = records.slice(0, 100);
 
   return <main className="search-page">
@@ -47,7 +48,7 @@ export default async function GarderiesPage({ params, searchParams }: { params: 
       </form>
     </div></section>
     <section className="results-shell"><div className="section-inner">
-      <div className="results-toolbar"><div><span className="eyebrow">{fr ? "Répertoire officiel" : "Official directory"}</span><h2>{records.length} <span>{fr ? "établissements trouvés" : "providers found"}</span></h2></div><div className="result-context"><span>{fr ? `Données du Ministère de la Famille · mise à jour ${data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("fr-CA") : "automatique"}` : `Ministry of Family data · updated ${data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-CA") : "automatically"}`}</span></div></div>
+      <div className="results-toolbar"><div><span className="eyebrow">{fr ? "Répertoire officiel" : "Official directory"}</span><h2>{records.length} <span>{fr ? "établissements trouvés" : "providers found"}</span></h2></div><div className="result-context"><span>{fr ? `Résultats classés selon votre recherche · données du Ministère de la Famille · mise à jour ${data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("fr-CA") : "automatique"}` : `Results ranked for your search · Ministry of Family data · updated ${data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-CA") : "automatically"}`}</span></div></div>
       <div className="results-list">
         <div className="demo-notice"><div className="notice-icon">✓</div><div><strong>{fr ? "Disponibilité : attention à la fraîcheur des données" : "Availability: check data freshness"}</strong><p>{fr ? "Le répertoire confirme les établissements en fonction, mais ne signifie pas qu'une place est disponible aujourd'hui." : "The directory confirms active providers, but does not mean a spot is available today."}</p></div></div>
         {visible.map(record => <article className="provider-card" key={record.id}><div className="provider-main"><div className="provider-avatar" aria-hidden="true">{typeLabel(record.type, fr).charAt(0)}</div><div className="provider-copy"><div className="provider-topline"><span className="provider-type">{typeLabel(record.type, fr)}</span><span className="status status-neutral">{fr ? "Répertorié" : "Listed"}</span></div><h3>{record.name}</h3><div className="provider-meta"><span>{record.city}</span>{record.postalCode && <span>{record.postalCode}</span>}</div><p>{record.address || (fr ? "Adresse disponible dans les données officielles." : "Address available in the official data.")}</p></div></div><div className="provider-footer"><span>{fr ? "Source : Ministère de la Famille" : "Source: Quebec Ministry of Family"}</span><Link href={`/${locale}/garderie/${record.slug}`} className="text-link">{fr ? "Voir la fiche" : "View profile"} →</Link></div></article>)}
