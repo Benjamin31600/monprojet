@@ -7,37 +7,109 @@ export function isLocale(value: string): value is Locale {
 
 export const dictionaries = {
   fr: {
-    nav: { search: "Garderies", subsidized: "Garderie subventionnée", cpe: "CPE", about: "À propos" },
-    footer: { tagline: "La recherche de garde pensée pour les familles au Québec.", privacy: "Confidentialité", terms: "Conditions", cookies: "Témoins" },
-    home: {
-      eyebrow: "Québec · Recherche de garde", title: "Trouvez une place en garderie près de chez vous.",
-      intro: "Un moteur de recherche simple pour trouver les options de garde qui correspondent à votre secteur, à l’âge de votre enfant et à votre date de besoin.",
-      location: "Ville ou code postal", age: "Âge de l’enfant", type: "Type de garde", search: "Rechercher",
-      ages: { a: "0–18 mois", b: "18–36 mois", c: "3–5 ans" },
-      types: { cpe: "CPE", subsidized: "Garderie subventionnée", family: "Milieu familial", private: "Garderie non subventionnée" },
-      why: "Pourquoi nous", notDirectory: "Pas seulement une liste de garderies.",
-      cards: ["Recherche locale", "Disponibilité utile", "Une solution complète"],
-      cardText: ["Commencez par votre ville ou votre secteur et trouvez les options pertinentes autour de vous.", "Notre objectif est de rendre visible la fraîcheur de l’information plutôt qu’une disponibilité impossible à vérifier.", "À terme : place régulière, garde alternative, remplacement et solutions ponctuelles depuis un même espace."],
-      local: "Recherche locale", cities: "Garderies par ville"
+    nav: {
+      search: "Trouver une garde",
+      subsidized: "Garderies subventionnées",
+      cpe: "CPE",
+      about: "À propos",
+      cta: "Rechercher",
     },
-    pages: { searchTitle: "Trouver une garderie près de chez vous", searchDesc: "Recherchez des garderies, CPE et milieux familiaux selon votre secteur, l’âge de votre enfant et vos besoins.", subsidizedTitle: "Garderies subventionnées au Québec", cpeTitle: "CPE au Québec", aboutTitle: "À propos", privacyTitle: "Politique de confidentialité", termsTitle: "Conditions d’utilisation", cookiesTitle: "Témoins" }
+    footer: {
+      tagline: "La garde de votre famille, simplement.",
+      privacy: "Confidentialité",
+      terms: "Conditions",
+      cookies: "Témoins",
+    },
+    home: {
+      eyebrow: "Québec · Canada · Garde d’enfants",
+      title: "La garde de votre famille, simplement.",
+      intro: "Trouvez une garderie, un CPE ou un service de garde près de chez vous. MyCoco vous aide à trouver une solution qui s’adapte à votre famille.",
+      location: "Ville ou code postal",
+      age: "Âge de l’enfant",
+      type: "Type de garde",
+      search: "Rechercher",
+      ages: { a: "0–18 mois", b: "18–36 mois", c: "3–5 ans" },
+      types: {
+        cpe: "CPE",
+        subsidized: "Garderie subventionnée",
+        family: "Milieu familial",
+        private: "Garderie non subventionnée",
+      },
+      why: "POUR LES FAMILLES",
+      notDirectory: "Plus qu’un annuaire de garderies.",
+      cards: ["Trouver", "Comprendre", "Être accompagné"],
+      cardText: [
+        "Recherchez les options de garde qui correspondent à votre secteur et aux besoins de votre enfant.",
+        "Comparez les types de services et voyez plus clairement les informations disponibles avant de contacter un service.",
+        "Aujourd’hui, une recherche simple. Demain, un espace pour organiser votre garde et trouver une solution quand vos plans changent.",
+      ],
+      local: "PRÈS DE CHEZ VOUS",
+      cities: "Trouvez une garderie près de chez vous",
+    },
+    pages: {
+      searchTitle: "Trouver une garderie près de chez vous",
+      searchDesc: "Recherchez des garderies, CPE et services de garde en milieu familial selon votre secteur, l’âge de votre enfant et vos besoins.",
+      subsidizedTitle: "Garderies subventionnées au Québec",
+      cpeTitle: "CPE au Québec",
+      aboutTitle: "À propos de MyCoco",
+      privacyTitle: "Politique de confidentialité",
+      termsTitle: "Conditions d’utilisation",
+      cookiesTitle: "Témoins",
+    },
   },
   en: {
-    nav: { search: "Daycares", subsidized: "Subsidized daycare", cpe: "CPE", about: "About" },
-    footer: { tagline: "Childcare search designed for families in Quebec.", privacy: "Privacy", terms: "Terms", cookies: "Cookies" },
-    home: {
-      eyebrow: "Quebec · Childcare search", title: "Find a childcare spot near you.",
-      intro: "A simple search engine to find childcare options that fit your area, your child’s age and when you need care.",
-      location: "City or postal code", age: "Child’s age", type: "Childcare type", search: "Search",
-      ages: { a: "0–18 months", b: "18–36 months", c: "3–5 years" },
-      types: { cpe: "CPE", subsidized: "Subsidized daycare", family: "Home daycare", private: "Non-subsidized daycare" },
-      why: "Why us", notDirectory: "More than a daycare directory.",
-      cards: ["Local search", "Useful availability", "A complete solution"],
-      cardText: ["Start with your city or area and find the childcare options that matter around you.", "Our goal is to show how fresh the information is, instead of relying on availability that cannot be checked.", "Over time: regular care, backup care, replacements and occasional solutions from one place."],
-      local: "Local search", cities: "Daycares by city"
+    nav: {
+      search: "Find childcare",
+      subsidized: "Subsidized daycare",
+      cpe: "CPE",
+      about: "About",
+      cta: "Search",
     },
-    pages: { searchTitle: "Find a daycare near you", searchDesc: "Search daycares, CPEs and home daycares by area, child age and childcare needs.", subsidizedTitle: "Subsidized daycares in Quebec", cpeTitle: "CPEs in Quebec", aboutTitle: "About", privacyTitle: "Privacy policy", termsTitle: "Terms of use", cookiesTitle: "Cookies" }
-  }
+    footer: {
+      tagline: "Your family’s childcare, made simpler.",
+      privacy: "Privacy",
+      terms: "Terms",
+      cookies: "Cookies",
+    },
+    home: {
+      eyebrow: "Quebec · Canada · Childcare",
+      title: "Your family’s childcare, made simpler.",
+      intro: "Find a daycare, CPE or childcare service near you. MyCoco helps you find a solution that fits your family.",
+      location: "City or postal code",
+      age: "Child’s age",
+      type: "Childcare type",
+      search: "Search",
+      ages: { a: "0–18 months", b: "18–36 months", c: "3–5 years" },
+      types: {
+        cpe: "CPE",
+        subsidized: "Subsidized daycare",
+        family: "Home daycare",
+        private: "Non-subsidized daycare",
+      },
+      why: "FOR FAMILIES",
+      notDirectory: "More than a daycare directory.",
+      cards: ["Find", "Understand", "Stay supported"],
+      cardText: [
+        "Search childcare options that match your area and your child’s needs.",
+        "Compare service types and get clearer information before contacting a childcare provider.",
+        "A simple search today. A complete family-care space tomorrow, built for when plans change.",
+      ],
+      local: "NEAR YOU",
+      cities: "Find childcare near you",
+    },
+    pages: {
+      searchTitle: "Find a daycare near you",
+      searchDesc: "Search daycares, CPEs and home daycares by area, child age and childcare needs.",
+      subsidizedTitle: "Subsidized daycares in Quebec",
+      cpeTitle: "CPEs in Quebec",
+      aboutTitle: "About MyCoco",
+      privacyTitle: "Privacy policy",
+      termsTitle: "Terms of use",
+      cookiesTitle: "Cookies",
+    },
+  },
 } as const;
 
-export function getDictionary(locale: Locale) { return dictionaries[locale]; }
+export function getDictionary(locale: Locale) {
+  return dictionaries[locale];
+}
