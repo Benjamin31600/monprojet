@@ -40,6 +40,11 @@ function pick(headers, candidates) {
 function slugify(value) {
   return normalize(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
+function numberOrNull(value) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : null;
+}
 
 const response = await fetch(SOURCE_URL, { headers: { "user-agent": "MyCoco/1.0" } });
 if (!response.ok) throw new Error(`Unable to download Quebec childcare dataset: ${response.status}`);
@@ -55,6 +60,8 @@ const indexes = {
   city: pick(headers, ["Municipalite", "Municipalité", "Ville"]),
   postal: pick(headers, ["Code postal", "Code postal de l'installation"]),
   phone: pick(headers, ["Téléphone", "Telephone"]),
+  latitude: pick(headers, ["Latitude", "Lat", "Coordonnée latitude", "Coordonnee latitude"]),
+  longitude: pick(headers, ["Longitude", "Long", "Coordonnée longitude", "Coordonnee longitude"]),
 };
 
 const records = rows.slice(1).map((row, index) => {
@@ -71,6 +78,8 @@ const records = rows.slice(1).map((row, index) => {
     address: get("address"),
     postalCode: get("postal"),
     phone: get("phone"),
+    latitude: numberOrNull(get("latitude")),
+    longitude: numberOrNull(get("longitude")),
     source: "Ministère de la Famille — Données Québec",
     sourceUpdatedAt: SOURCE_UPDATED_AT,
   };
