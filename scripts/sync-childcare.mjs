@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 
 const SOURCE_URL = "https://www.donneesquebec.ca/recherche/dataset/be36f85e-e419-4978-9c34-cb5795622595/resource/89af3537-4506-488c-8d0e-6d85b4033a0e/download/repertoire-installation.csv";
 const OUTPUT = "data/childcare.json";
+const SOURCE_UPDATED_AT = "2026-09-04";
 
 function parseCsv(text) {
   const rows = [];
@@ -10,8 +11,7 @@ function parseCsv(text) {
     const ch = text[i], next = text[i + 1];
     if (ch === '"' && quoted && next === '"') { cell += '"'; i++; continue; }
     if (ch === '"') { quoted = !quoted; continue; }
-    if (!quoted && ch === ';') { row.push(cell); cell = ""; continue; }
-    if (!quoted && ch === ',') { row.push(cell); cell = ""; continue; }
+    if (!quoted && (ch === ';' || ch === ',')) { row.push(cell); cell = ""; continue; }
     if (!quoted && (ch === "\n" || ch === "\r")) {
       if (ch === "\r" && next === "\n") i++;
       row.push(cell); cell = "";
@@ -31,7 +31,8 @@ function normalize(value = "") {
 function pick(headers, candidates) {
   const normalized = headers.map(normalize);
   for (const candidate of candidates) {
-    const index = normalized.findIndex((h) => h === normalize(candidate) || h.includes(normalize(candidate)));
+    const needle = normalize(candidate);
+    const index = normalized.findIndex((h) => h === needle || h.includes(needle));
     if (index >= 0) return index;
   }
   return -1;
@@ -48,7 +49,7 @@ if (rows.length < 2) throw new Error("The Quebec childcare dataset is empty or c
 
 const headers = rows[0];
 const indexes = {
-  name: pick(headers, ["Nom de l'installation", "Nom installation", "Nom" ]),
+  name: pick(headers, ["Nom de l'installation", "Nom installation", "Nom"]),
   type: pick(headers, ["Type de service", "Type d'installation", "Type"]),
   address: pick(headers, ["Adresse", "Adresse de l'installation"]),
   city: pick(headers, ["Municipalite", "Municipalité", "Ville"]),
@@ -71,10 +72,12 @@ const records = rows.slice(1).map((row, index) => {
     postalCode: get("postal"),
     phone: get("phone"),
     source: "Ministère de la Famille — Données Québec",
-    sourceUpdatedAt: new Date().toISOString().slice(0, 10),
+    sourceUpdatedAt: SOURCE_UPDATED_AT,
   };
 }).filter(Boolean);
 
+if (!records.length) throw new Error("No childcare records were recognized from the Quebec dataset.");
+
 await mkdir("data", { recursive: true });
-await writeFile(OUTPUT, JSON.stringify({ sourceUrl: SOURCE_URL, updatedAt: new Date().toISOString(), count: records.length, records }, null, 2) + "\n");
+await writeFile(OUTPUT, JSON.stringify({ sourceUrl: SOURCE_URL, updatedAt: SOURCE_UPDATED_AT, count: records.length, records }, null, 2) + "\n");
 console.log(`MyCoco: synced ${records.length} childcare records to ${OUTPUT}`);
