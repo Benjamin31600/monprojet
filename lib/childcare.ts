@@ -39,9 +39,9 @@ export function normalize(value = "") {
 export function typeLabel(type = "", fr = true) {
   const n = normalize(type);
   if (n.includes("centre de la petite enfance") || n === "cpe" || n.includes("cpe")) return "CPE";
+  if (n.includes("non subvention") || n.includes("non-subvention")) return fr ? "Garderie non subventionnée" : "Non-subsidized daycare";
   if (n.includes("subvention")) return fr ? "Garderie subventionnée" : "Subsidized daycare";
   if (n.includes("milieu familial") || n.includes("bureau coordonnateur")) return fr ? "Milieu familial" : "Home daycare";
-  if (n.includes("non subvention") || n.includes("non-subvention")) return fr ? "Garderie non subventionnée" : "Non-subsidized daycare";
   return fr ? "Service de garde" : "Childcare service";
 }
 
@@ -49,7 +49,7 @@ export function matchesType(record: ChildcareRecord, filter: string) {
   if (!filter) return true;
   const n = normalize(record.type);
   if (filter === "cpe") return n.includes("cpe") || n.includes("centre de la petite enfance");
-  if (filter === "subventionnee") return n.includes("subvention");
+  if (filter === "subventionnee") return n.includes("subvention") && !n.includes("non subvention") && !n.includes("non-subvention");
   if (filter === "milieu-familial") return n.includes("milieu familial") || n.includes("bureau coordonnateur");
   if (filter === "non-subventionnee") return n.includes("non subvention") || n.includes("non-subvention");
   return true;
@@ -68,18 +68,38 @@ export function childcareSearchScore(record: ChildcareRecord, query = "", type =
   const city = normalize(record.city).replace(/\s+/g, "");
   const postal = normalize(record.postalCode).replace(/\s+/g, "");
   let score = 0;
+
   if (needle) {
     if (postal === needle) score += 100;
     else if (postal.startsWith(needle) && needle.length >= 3) score += 85;
     else if (city === needle) score += 80;
     else if (city.includes(needle)) score += 55;
     else if (postal.includes(needle)) score += 40;
-  } else score += 10;
+  } else {
+    score += 10;
+  }
+
   if (userLat !== undefined && userLon !== undefined && record.latitude !== null && record.longitude !== null) {
     score += Math.max(0, 80 - distanceKm(userLat, userLon, record.latitude, record.longitude) * 8);
   }
+
   if (type && matchesType(record, type)) score += 25;
   return score;
+}
+
+export function matchReasons(record: ChildcareRecord, query = "", type = "", fr = true) {
+  const reasons: string[] = [];
+  const needle = normalize(query);
+  const city = normalize(record.city);
+  const postal = normalize(record.postalCode).replace(/\s+/g, "");
+
+  if (needle && (city === needle || city.includes(needle) || postal.startsWith(needle.replace(/\s+/g, "")))) {
+    reasons.push(fr ? "Secteur recherché" : "Requested area");
+  }
+  if (type && matchesType(record, type)) {
+    reasons.push(fr ? typeLabel(record.type, true) : typeLabel(record.type, false));
+  }
+  return reasons;
 }
 
 export function rankChildcare(records: ChildcareRecord[], query = "", type = "", userLat?: number, userLon?: number) {
