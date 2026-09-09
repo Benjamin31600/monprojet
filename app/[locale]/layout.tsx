@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
 import { getDictionary, isLocale, locales, type Locale } from "@/lib/i18n";
+import FunnelTracker from "@/components/FunnelTracker";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -31,6 +32,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const d = getDictionary(locale);
   const other = locale === "fr" ? "en" : "fr";
   return <>
+    <FunnelTracker />
     <a className="skip-link" href="#main-content">{locale === "fr" ? "Aller au contenu principal" : "Skip to main content"}</a>
     <header className="site-header">
       <div className="site-header-inner">
