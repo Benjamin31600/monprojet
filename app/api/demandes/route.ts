@@ -88,14 +88,12 @@ export async function POST(request: NextRequest) {
       source: tracking ? `mon-besoin|${tracking}` : "mon-besoin",
     });
 
-    if (!result.saved) return errorRedirect(request, parsed.data.locale, "configuration");
-
     const url = new URL(`/${parsed.data.locale}/garderies`, request.url);
     url.searchParams.set("ville", parsed.data.ville);
     url.searchParams.set("age", parsed.data.age);
     if (parsed.data.type) url.searchParams.set("type", parsed.data.type);
     if (parsed.data.debut) url.searchParams.set("debut", parsed.data.debut);
-    url.searchParams.set("demande", "enregistree");
+    url.searchParams.set("demande", result.saved ? "enregistree" : "recherche");
     return NextResponse.redirect(url, 303);
   } catch {
     return errorRedirect(request, "fr", "server");
