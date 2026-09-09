@@ -54,11 +54,12 @@ export function typeLabel(type = "", fr = true) {
 
 export function matchesType(record: ChildcareRecord, filter: string) {
   if (!filter) return true;
+  const f = normalize(filter);
   const n = normalize(record.type);
-  if (filter === "cpe") return n.includes("cpe") || n.includes("centre de la petite enfance");
-  if (filter === "subventionnee") return n.includes("subvention") && !n.includes("non subvention") && !n.includes("non-subvention");
-  if (filter === "milieu-familial") return n.includes("milieu familial") || n.includes("bureau coordonnateur");
-  if (filter === "non-subventionnee") return n.includes("non subvention") || n.includes("non-subvention");
+  if (f === "cpe" || n.includes("cpe") || n.includes("centre de la petite enfance")) return f === "cpe" ? true : false;
+  if (f.includes("subventionnee") || f.includes("subventionnée")) return n.includes("subvention") && !n.includes("non subvention") && !n.includes("non-subvention");
+  if (f.includes("milieu familial")) return n.includes("milieu familial") || n.includes("bureau coordonnateur");
+  if (f.includes("non subventionnee") || f.includes("non subventionnée") || f.includes("garderie privee") || f.includes("garderie privée")) return n.includes("non subvention") || n.includes("non-subvention");
   return true;
 }
 
@@ -72,7 +73,7 @@ function ageSignal(record: ChildcareRecord, age = "") {
   if (!services) return false;
   if (age === "0-18") return /(poupon|poupons|0.?18|moins de 18|18 mois)/.test(services);
   if (age === "18-36") return /(poupon|poupons|18.?36|18 mois|24 mois|36 mois|18.?36 mois)/.test(services);
-  if (age === "3-5") return /(3.?5|3 ans|4 ans|5 ans|prescolaire|prescolaires|prescolaire)/.test(services);
+  if (age === "3-5") return /(3.?5|3 ans|4 ans|5 ans|prescolaire|prescolaires)/.test(services);
   if (age === "5+") return /(5 ans|6 ans|7 ans|8 ans|scolaire|scolaires)/.test(services);
   return false;
 }

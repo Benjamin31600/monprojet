@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
     ].filter(Boolean).join("&");
 
     let saved = false;
+    let demandId: string | undefined;
     try {
       const result = await saveParentDemand({
         locale: parsed.data.locale,
@@ -90,8 +91,8 @@ export async function POST(request: NextRequest) {
         source: tracking ? `mon-besoin|${tracking}` : "mon-besoin",
       });
       saved = result.saved;
+      demandId = result.saved ? result.id : undefined;
     } catch {
-      // Search must remain usable even if demand persistence is temporarily unavailable.
       saved = false;
     }
 
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
     url.searchParams.set("age", parsed.data.age);
     if (parsed.data.type) url.searchParams.set("type", parsed.data.type);
     if (parsed.data.debut) url.searchParams.set("debut", parsed.data.debut);
+    if (demandId) url.searchParams.set("demandeId", demandId);
     url.searchParams.set("demande", saved ? "enregistree" : "recherche");
     return NextResponse.redirect(url, 303);
   } catch {
