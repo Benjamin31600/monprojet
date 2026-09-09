@@ -1,0 +1,26 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { isLocale } from "@/lib/i18n";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  return { title: locale === "fr" ? "Sécurité et protection des données" : "Security and data protection" };
+}
+
+export default async function SecurityPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale: raw } = await params;
+  if (!isLocale(raw)) notFound();
+  const fr = raw === "fr";
+  const items = fr
+    ? [["Chiffrement", "Les échanges avec MyCoco sont conçus pour utiliser HTTPS/TLS. Les secrets d’infrastructure ne doivent jamais être exposés au navigateur ou au dépôt de code."], ["Accès minimal", "Les accès aux données doivent suivre le principe du besoin de savoir. Les comptes techniques et humains sont séparés lorsque possible."], ["Données minimisées", "Nous cherchons à ne recueillir que les renseignements nécessaires au service demandé et à éviter les données sensibles qui ne sont pas utiles au produit."], ["Protection applicative", "Les entrées sont validées côté serveur, les routes sensibles sont protégées contre l’abus et l’application applique des en-têtes de sécurité modernes."], ["Surveillance", "Les risques, dépendances et accès doivent être revus régulièrement. Les incidents de sécurité suivent un processus documenté de qualification, confinement, correction et communication selon les obligations applicables."]]
+    : [["Encryption", "MyCoco is designed to use HTTPS/TLS for data in transit. Infrastructure secrets must never be exposed to the browser or committed to source control."], ["Least privilege", "Access to data should follow a need-to-know principle. Human and technical access are separated where practical."], ["Data minimization", "We aim to collect only information needed for the requested service and avoid sensitive data that is not useful to the product."], ["Application protection", "Inputs are validated server-side, sensitive routes are protected against abuse and the application applies modern security headers."], ["Monitoring", "Risks, dependencies and access should be reviewed regularly. Security incidents follow a documented process for assessment, containment, remediation and communication as required."]];
+  return <article className="legal-page"><div className="legal-inner">
+    <span className="legal-eyebrow">MyCoco · {fr ? "Confiance" : "Trust"}</span>
+    <h1>{fr ? "Sécurité et protection des données" : "Security and data protection"}</h1>
+    <p className="legal-lead">{fr ? "Nous construisons MyCoco avec une logique de sécurité dès le départ : moins de données, moins d’accès, plus de contrôle et une architecture pensée pour évoluer proprement." : "We are building MyCoco with security from the start: less data, fewer access paths, more control and an architecture designed to scale responsibly."}</p>
+    <div className="security-grid">{items.map(([title, text]) => <section key={title}><div className="security-icon" aria-hidden="true">✓</div><div><h2>{title}</h2><p>{text}</p></div></section>)}</div>
+    <section className="legal-callout"><strong>{fr ? "Une plateforme familiale mérite un niveau d’exigence élevé." : "A family platform deserves a high standard."}</strong><p>{fr ? "La sécurité technique ne remplace pas les obligations légales. MyCoco doit compléter cette base par une gouvernance de la vie privée, une analyse des risques, des règles de conservation, une gestion des incidents et une revue juridique avant le lancement commercial." : "Technical security does not replace legal obligations. MyCoco will complement this foundation with privacy governance, risk assessment, retention rules, incident management and legal review before commercial launch."}</p></section>
+  </div><style>{`.legal-page{min-height:70vh;background:#f8f4ea;padding:72px 20px}.legal-inner{max-width:900px;margin:auto;background:#fff;border:1px solid #dfe7e2;border-radius:24px;padding:clamp(28px,5vw,58px);box-shadow:0 18px 55px rgba(23,63,58,.08)}.legal-eyebrow{color:#236b58;font-size:.72rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.legal-page h1{font-size:clamp(2.3rem,5vw,4rem);line-height:1.02;letter-spacing:-.055em;margin:14px 0 18px;color:#173f3a}.legal-lead{font-size:1.08rem;line-height:1.7;color:#315b53;margin-bottom:38px}.security-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.security-grid section{display:flex;gap:14px;padding:22px;border:1px solid #dfe7e2;border-radius:18px;background:#fbfcfb}.security-icon{display:grid;place-items:center;flex:0 0 auto;width:32px;height:32px;border-radius:10px;background:#e5efe8;color:#236b58;font-weight:900}.legal-page h2{font-size:1.02rem;margin:3px 0 7px;color:#173f3a}.legal-page p{color:#5f706b;line-height:1.72;margin:0}.legal-callout{padding:20px!important;margin-top:20px;border:1px solid #d3e4da!important;border-radius:16px;background:#f0f6f2}.legal-callout strong{display:block;color:#236b58;margin-bottom:6px}@media(max-width:700px){.security-grid{grid-template-columns:1fr}}`}</style>
+  </article>;
+}
