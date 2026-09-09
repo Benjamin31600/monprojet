@@ -4,145 +4,34 @@ import { getChildcareData, matchReasons, normalize, rankChildcare, typeLabel } f
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  const fr = locale !== "en";
-  return {
-    title: fr ? "Garderies, CPE et solutions de garde | MyCoco" : "Daycares, CPEs and childcare solutions | MyCoco",
-    description: fr
-      ? "Comparez les garderies et CPE de votre secteur. MyCoco structure votre besoin et classe les solutions selon les critères disponibles."
-      : "Compare daycares and CPEs in your area. MyCoco structures your need and ranks solutions using available criteria.",
-    alternates: {
-      canonical: `/${locale}/garderies`,
-      languages: { fr: "/fr/garderies", en: "/en/garderies" },
-    },
-    openGraph: {
-      title: fr ? "Garderies, CPE et solutions de garde | MyCoco" : "Daycares, CPEs and childcare solutions | MyCoco",
-      description: fr ? "Des solutions classées selon votre besoin, avec des données officielles du Québec." : "Solutions ranked around your need, using official Quebec data.",
-      type: "website",
-    },
-  };
+  const { locale } = await params; const fr = locale !== "en";
+  return { title: fr ? "Trouver une garderie au Québec | MyCoco" : "Find childcare in Quebec | MyCoco", description: fr ? "Explorez les garderies, CPE et milieux familiaux de votre secteur. Filtrez les options puis créez votre besoin pour obtenir une recherche plus pertinente." : "Explore daycares, CPEs and home childcare in your area. Filter options, then create your need for a more relevant search.", alternates: { canonical: `/${locale}/garderies`, languages: { "fr-CA": "/fr/garderies", "en-CA": "/en/garderies" } } };
 }
 
-export default async function GarderiesPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const { locale } = await params;
-  const queryParams = await searchParams;
-  const fr = locale !== "en";
-  const data = await getChildcareData();
-
-  const query = typeof queryParams.ville === "string" ? queryParams.ville : "";
-  const type = typeof queryParams.type === "string" ? queryParams.type : "";
-  const age = typeof queryParams.age === "string" ? queryParams.age : "";
-  const debut = typeof queryParams.debut === "string" ? queryParams.debut : "";
-  const success = queryParams.demande === "enregistree";
-
-  const normalizedQuery = normalize(query);
-  const filtered = data.records.filter((record) => {
-    if (!normalizedQuery) return true;
-    const city = normalize(record.city);
-    const postal = normalize(record.postalCode).replace(/\s+/g, "");
-    const needle = normalizedQuery.replace(/\s+/g, "");
-    return city.includes(normalizedQuery) || postal.includes(needle);
-  });
-  const ranked = rankChildcare(filtered, query, type, undefined, undefined, age);
-  const hasNeed = Boolean(query || type || age || debut);
-
-  return (
-    <main>
-      <section className="page-hero">
-        <div className="container">
-          <p className="eyebrow">MYCOCO · {fr ? "SOLUTIONS DE GARDE" : "CHILDCARE SOLUTIONS"}</p>
-          <h1>{fr ? "Trouvez les solutions les plus pertinentes pour votre famille" : "Find the most relevant childcare solutions for your family"}</h1>
-          <p className="hero-copy">
-            {fr
-              ? "MyCoco transforme votre recherche en demande structurée et classe les options selon les critères disponibles, sans jamais présenter une place comme garantie."
-              : "MyCoco turns your search into a structured family need and ranks options using available criteria, without ever presenting a place as guaranteed."}
-          </p>
-          <div className="hero-actions">
-            <Link className="primary-button" href={`/${locale}/mon-besoin`}>{fr ? "Créer ma demande" : "Create my request"}</Link>
-          </div>
+export default async function GarderiesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { locale } = await params; const q = await searchParams; const fr = locale !== "en"; const data = await getChildcareData();
+  const query = typeof q.ville === "string" ? q.ville : ""; const type = typeof q.type === "string" ? q.type : ""; const age = typeof q.age === "string" ? q.age : ""; const debut = typeof q.debut === "string" ? q.debut : "";
+  const normalized = normalize(query); const filtered = data.records.filter(r => { if (!normalized) return true; const city = normalize(r.city); const postal = normalize(r.postalCode).replace(/\s+/g, ""); const needle = normalized.replace(/\s+/g, ""); return city.includes(normalized) || postal.includes(needle); });
+  const ranked = rankChildcare(filtered, query, type, undefined, undefined, age); const hasNeed = Boolean(query || type || age || debut);
+  const cityQuickLinks = ["Mirabel", "Blainville", "Boisbriand", "Saint-Eustache", "Sainte-Thérèse"];
+  return <main className="mc-directory">
+    <section className="mc-directory-hero"><div className="mc-directory-wrap">
+      <div className="mc-breadcrumb"><Link href={`/${locale}`}>MyCoco</Link><span>›</span><span>{fr ? "Explorer" : "Explore"}</span></div>
+      <div className="mc-directory-grid">
+        <div><span className="mc-dir-eyebrow">{fr ? "EXPLORER LES SOLUTIONS" : "EXPLORE CHILDCARE"}</span><h1>{fr ? "Commencez par votre besoin. Pas par une liste interminable." : "Start with your need. Not an endless list."}</h1><p>{fr ? "Explorez les solutions de garde de votre secteur, puis laissez MyCoco les remettre dans le contexte de votre famille." : "Explore childcare options in your area, then let MyCoco put them into your family's context."}</p></div>
+        <div className="mc-search-card"><div className="mc-search-card-title"><span>⌕</span><div><strong>{fr ? "Votre recherche" : "Your search"}</strong><small>{fr ? "Quelques critères suffisent pour commencer." : "A few criteria are enough to start."}</small></div></div>
+          <form method="get"><label><span>{fr ? "Ville ou code postal" : "City or postal code"}</span><input name="ville" defaultValue={query} placeholder={fr ? "Ex. Mirabel ou J7J" : "e.g. Mirabel or J7J"}/></label><div className="mc-form-row"><label><span>{fr ? "Âge" : "Age"}</span><select name="age" defaultValue={age}><option value="">{fr ? "Tous les âges" : "All ages"}</option><option value="0-18">0–18 mois</option><option value="18-36">18–36 mois</option><option value="3-5">3–5 ans</option><option value="5+">5 ans et +</option></select></label><label><span>{fr ? "Type" : "Type"}</span><select name="type" defaultValue={type}><option value="">{fr ? "Tous les types" : "All types"}</option><option value="CPE">CPE</option><option value="subventionnee">{fr ? "Garderie subventionnée" : "Subsidized daycare"}</option><option value="milieu familial">{fr ? "Milieu familial" : "Home daycare"}</option><option value="non subventionnee">{fr ? "Garderie privée" : "Private daycare"}</option></select></label></div><button type="submit">{fr ? "Explorer les solutions" : "Explore solutions"}<span>→</span></button></form>
         </div>
-      </section>
+      </div>
+    </div></section>
 
-      <section className="section section-muted">
-        <div className="container">
-          {success && (
-            <div className="matching-success" role="status">
-              <strong>{fr ? "✓ Votre demande est enregistrée" : "✓ Your request is saved"}</strong>
-              <span>{fr ? "Les critères transmis servent maintenant à prioriser votre recherche. La disponibilité doit toujours être confirmée." : "Your criteria are now used to prioritize the search. Availability must always be confirmed."}</span>
-            </div>
-          )}
-
-          {hasNeed && (
-            <div className="need-summary">
-              <div><span>{fr ? "Votre besoin" : "Your need"}</span><strong>{query || (fr ? "Québec" : "Quebec")}</strong></div>
-              {age && <div><span>{fr ? "Âge" : "Age"}</span><strong>{age}</strong></div>}
-              {type && <div><span>{fr ? "Type" : "Type"}</span><strong>{typeLabel(type, fr)}</strong></div>}
-              {debut && <div><span>{fr ? "Début" : "Start"}</span><strong>{debut}</strong></div>}
-              <Link className="text-link" href={`/${locale}/mon-besoin`}>{fr ? "Modifier" : "Edit"}</Link>
-            </div>
-          )}
-
-          <div className="results-toolbar">
-            <div>
-              <p className="eyebrow">{fr ? "SOLUTIONS PERTINENTES" : "RELEVANT SOLUTIONS"}</p>
-              <h2>{ranked.length} {fr ? "solution(s)" : "solution(s)"}</h2>
-              <p className="results-subtitle">{fr ? "Le classement combine secteur, type et, lorsque la donnée officielle est disponible, des signaux de capacité/service. La disponibilité réelle reste à confirmer." : "Ranking combines area, type and, where official data is available, capacity/service signals. Actual availability must still be confirmed."}</p>
-            </div>
-            <Link className="secondary-button" href={`/${locale}/mon-besoin`}>{fr ? "Affiner ma demande" : "Refine my request"}</Link>
-          </div>
-
-          {ranked.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon" aria-hidden="true">⌕</div>
-              <h3>{fr ? "Aucune solution trouvée avec ces critères" : "No solution found with these criteria"}</h3>
-              <p>{fr ? "Essayez une autre ville, un code postal plus large ou un autre type de garde." : "Try another city, a broader postal code or another childcare type."}</p>
-              <Link className="primary-button" href={`/${locale}/mon-besoin`}>{fr ? "Modifier ma recherche" : "Change my search"}</Link>
-            </div>
-          ) : (
-            <div className="provider-grid">
-              {ranked.map((record, index) => {
-                const reasons = matchReasons(record, query, type, fr, age);
-                const exactArea = normalize(record.city) === normalizedQuery || normalize(record.postalCode).replace(/\s+/g, "") === normalizedQuery.replace(/\s+/g, "");
-                const strongMatch = reasons.length >= 2 || exactArea;
-                return (
-                  <article className="provider-card" key={record.id}>
-                    <div className="provider-card-top">
-                      <div className="provider-avatar" aria-hidden="true">{record.name.charAt(0).toUpperCase()}</div>
-                      <div>
-                        <span className="provider-type">{typeLabel(record.type, fr)}</span>
-                        {strongMatch && <span className="match-badge">{fr ? "Bonne correspondance" : "Good match"}</span>}
-                      </div>
-                    </div>
-                    <h3>{record.name}</h3>
-                    <p>{record.city} · {record.postalCode}</p>
-                    {reasons.length > 0 && <div className="match-reasons">{reasons.map((reason) => <span key={reason}>✓ {reason}</span>)}</div>}
-                    {record.capacityTotal && <p className="capacity-signal">{fr ? `Capacité autorisée déclarée : ${record.capacityTotal}` : `Declared licensed capacity: ${record.capacityTotal}`}</p>}
-                    {index < 3 && <p className="why-match">{fr ? "Priorisée parce qu’elle correspond aux critères actuellement disponibles." : "Prioritized because it matches the criteria currently available."}</p>}
-                    <div className="provider-card-footer">
-                      <span className="status status-neutral">{fr ? "Disponibilité à confirmer" : "Availability to confirm"}</span>
-                      <Link className="text-link" href={`/${locale}/garderie/${record.slug}`}>{fr ? "Voir la fiche" : "View profile"} →</Link>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="demo-notice">
-            <span className="notice-icon" aria-hidden="true">✓</span>
-            <div>
-              <strong>{fr ? "Données officielles du Québec" : "Official Quebec data"}</strong>
-              <p>{fr ? `Répertoire des installations en fonction · données mises à jour le ${data.updatedAt}. Lorsque disponibles, les signaux de capacité proviennent aussi d’une source gouvernementale distincte. MyCoco distingue volontairement la présence d’un établissement de sa disponibilité réelle.` : `Active childcare installation directory · data updated ${data.updatedAt}. Where available, capacity signals also come from a separate government source. MyCoco deliberately distinguishes an existing provider from real availability.`}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+    <section className="mc-directory-main"><div className="mc-directory-wrap">
+      <div className="mc-quick"><span>{fr ? "Rechercher rapidement" : "Quick search"}</span>{cityQuickLinks.map(city => <Link key={city} href={`/${locale}/garderies?ville=${encodeURIComponent(city)}`}>{city}</Link>)}</div>
+      {hasNeed && <div className="mc-active-need"><div><small>{fr ? "RECHERCHE ACTIVE" : "ACTIVE SEARCH"}</small><strong>{query || (fr ? "Québec" : "Quebec")}</strong></div>{age && <div><small>{fr ? "ÂGE" : "AGE"}</small><strong>{age}</strong></div>}{type && <div><small>{fr ? "TYPE" : "TYPE"}</small><strong>{typeLabel(type, fr)}</strong></div>}<Link href={`/${locale}/mon-besoin`}>{fr ? "Passer à mon besoin" : "Build my need"} →</Link></div>}
+      <div className="mc-results-head"><div><span className="mc-dir-eyebrow">{fr ? "LES OPTIONS POUR VOUS" : "OPTIONS FOR YOU"}</span><h2>{ranked.length} {fr ? "solutions à explorer" : "solutions to explore"}</h2><p>{fr ? "Le classement privilégie les correspondances disponibles dans les données officielles. Une fiche ne garantit jamais une place." : "Ranking prioritizes matches available in official data. A profile never guarantees a spot."}</p></div><Link className="mc-need-button" href={`/${locale}/mon-besoin`}>{fr ? "Trouver ma solution" : "Find my solution"} →</Link></div>
+      {ranked.length === 0 ? <div className="mc-empty"><span>⌕</span><h3>{fr ? "Aucune solution avec ces critères" : "No solution with these criteria"}</h3><p>{fr ? "Élargissez la zone ou revenez à votre besoin pour laisser MyCoco vous guider." : "Broaden the area or return to your need and let MyCoco guide you."}</p><Link className="mc-need-button" href={`/${locale}/mon-besoin`}>{fr ? "Recommencer" : "Start again"}</Link></div> : <div className="mc-provider-grid">{ranked.slice(0, 30).map((record, index) => { const reasons = matchReasons(record, query, type, fr, age); const exact = normalize(record.city) === normalized || normalize(record.postalCode).replace(/\s+/g, "") === normalized.replace(/\s+/g, ""); return <article className={`mc-provider ${index < 3 ? "is-priority" : ""}`} key={record.id}><div className="mc-provider-top"><div className="mc-provider-icon">{record.name.charAt(0).toUpperCase()}</div><div><span>{typeLabel(record.type, fr)}</span>{(reasons.length >= 2 || exact) && <b>{fr ? "Correspond à votre recherche" : "Matches your search"}</b>}</div></div><h3>{record.name}</h3><p className="mc-provider-place">{record.city} <span>·</span> {record.postalCode}</p>{reasons.length > 0 && <div className="mc-reasons">{reasons.slice(0,3).map(reason => <span key={reason}>✓ {reason}</span>)}</div>}{record.capacityTotal ? <p className="mc-capacity">{fr ? `Capacité autorisée : ${record.capacityTotal}` : `Licensed capacity: ${record.capacityTotal}`}</p> : null}<div className="mc-provider-bottom"><span>{fr ? "Disponibilité à confirmer" : "Availability to confirm"}</span><Link href={`/${locale}/garderie/${record.slug}`}>{fr ? "Ouvrir la fiche" : "Open profile"} →</Link></div></article>})}</div>}
+      <div className="mc-source"><div>✓</div><p><strong>{fr ? "Une base officielle, pas une promesse de disponibilité." : "Official data, never a promise of availability."}</strong><br/>{fr ? `MyCoco utilise le répertoire des installations en fonction du Québec. Mise à jour des données : ${data.updatedAt}.` : `MyCoco uses Quebec's active childcare installation directory. Data updated: ${data.updatedAt}.`}</p></div>
+    </div></section>
+    <style>{`.mc-directory{background:#fcfbf7;color:#173f3a}.mc-directory-wrap{width:min(1180px,calc(100% - 40px));margin:auto}.mc-directory-hero{background:linear-gradient(180deg,#edf6f0 0%,#fcfbf7 100%);border-bottom:1px solid #dfe7e2;padding:25px 0 64px}.mc-breadcrumb{display:flex;gap:9px;color:#7b8983;font-size:12px;margin-bottom:42px}.mc-breadcrumb a{font-weight:800;color:#315b53}.mc-directory-grid{display:grid;grid-template-columns:1fr .78fr;gap:70px;align-items:center}.mc-dir-eyebrow{font-size:11px;font-weight:900;letter-spacing:.12em;color:#4c7a65}.mc-directory h1{font-size:clamp(43px,5.5vw,72px);line-height:.98;letter-spacing:-.065em;max-width:760px;margin:16px 0 20px}.mc-directory-grid>div:first-child p{max-width:650px;font-size:18px;line-height:1.65;color:#61726b;margin:0}.mc-search-card{background:#fff;border:1px solid #dbe6df;border-radius:24px;padding:22px;box-shadow:0 24px 65px rgba(23,63,58,.12)}.mc-search-card-title{display:flex;gap:12px;align-items:center;margin-bottom:20px}.mc-search-card-title>span{width:40px;height:40px;border-radius:12px;background:#e5f0e9;display:grid;place-items:center;color:#236b58;font-size:20px}.mc-search-card-title strong,.mc-search-card-title small{display:block}.mc-search-card-title strong{font-size:15px}.mc-search-card-title small{font-size:11px;color:#78857f;margin-top:2px}.mc-search-card form{display:grid;gap:12px}.mc-search-card label span{display:block;font-size:11px;font-weight:850;color:#52665e;margin-bottom:6px}.mc-search-card input,.mc-search-card select{width:100%;height:48px;border:1px solid #cbd8d1;border-radius:11px;background:#fff;padding:0 12px;color:#173f3a;outline:none;font-size:13px}.mc-search-card input:focus,.mc-search-card select:focus{border-color:#236b58;box-shadow:0 0 0 4px rgba(35,107,88,.08)}.mc-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mc-search-card button{height:50px;border:0;border-radius:12px;background:#236b58;color:#fff;font-weight:850;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}.mc-directory-main{padding:35px 0 90px}.mc-quick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:28px}.mc-quick>span{font-size:11px;font-weight:850;color:#7b8882;margin-right:4px}.mc-quick a{padding:8px 12px;border:1px solid #d9e4de;border-radius:999px;background:#fff;font-size:12px;font-weight:750;color:#315b53}.mc-quick a:hover{border-color:#9dbbae;background:#f3f8f5}.mc-active-need{display:flex;align-items:center;gap:26px;padding:15px 18px;margin-bottom:42px;border:1px solid #cfe1d7;background:#eff7f2;border-radius:17px}.mc-active-need div{padding-right:25px;border-right:1px solid #cfe1d7}.mc-active-need small,.mc-active-need strong{display:block}.mc-active-need small{font-size:9px;letter-spacing:.09em;color:#648174;font-weight:900}.mc-active-need strong{font-size:13px;margin-top:3px}.mc-active-need>a{margin-left:auto;color:#236b58;font-size:12px;font-weight:900}.mc-results-head{display:flex;justify-content:space-between;gap:25px;align-items:end;margin-bottom:30px}.mc-results-head h2{font-size:clamp(29px,3.5vw,43px);letter-spacing:-.045em;line-height:1;margin:8px 0 10px}.mc-results-head p{margin:0;color:#718079;font-size:13px;max-width:670px}.mc-need-button{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;min-height:46px;padding:0 17px;background:#173f3a;color:#fff;border-radius:11px;font-size:12px;font-weight:850}.mc-provider-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.mc-provider{background:#fff;border:1px solid #dfe7e2;border-radius:19px;padding:19px;min-height:245px;display:flex;flex-direction:column;transition:transform .16s,box-shadow .16s,border-color .16s}.mc-provider:hover{transform:translateY(-3px);box-shadow:0 15px 38px rgba(23,63,58,.09);border-color:#bfd1c7}.mc-provider.is-priority{border-top:3px solid #76a991}.mc-provider-top{display:flex;gap:10px;align-items:center}.mc-provider-icon{width:40px;height:40px;border-radius:12px;background:#edf5f0;display:grid;place-items:center;font-weight:900;color:#4c7a65}.mc-provider-top span{display:block;color:#63746d;font-size:10px;font-weight:850;text-transform:uppercase}.mc-provider-top b{display:block;color:#4d8269;font-size:9px;margin-top:3px}.mc-provider h3{font-size:17px;line-height:1.2;letter-spacing:-.02em;margin:17px 0 5px}.mc-provider-place{margin:0;color:#7a8781;font-size:11px}.mc-provider-place span{color:#a0aaa5}.mc-reasons{display:flex;flex-wrap:wrap;gap:5px;margin-top:13px}.mc-reasons span{font-size:9px;font-weight:750;color:#4f7163;background:#f0f7f3;border-radius:7px;padding:5px 7px}.mc-capacity{font-size:10px!important;color:#6d7d76!important;margin:12px 0 0!important}.mc-provider-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid #edf1ef}.mc-provider-bottom span{font-size:9px;color:#87928d}.mc-provider-bottom a{font-size:11px;color:#236b58;font-weight:900}.mc-source{display:flex;gap:11px;align-items:flex-start;margin-top:35px;padding:16px 18px;border:1px solid #d8e5de;border-radius:15px;background:#f4f8f5}.mc-source>div{width:22px;height:22px;border-radius:50%;background:#dceee4;color:#3f765f;display:grid;place-items:center;font-size:11px;font-weight:900}.mc-source p{margin:0;color:#708079;font-size:10px;line-height:1.55}.mc-source strong{color:#476b5c}.mc-empty{text-align:center;padding:70px 20px;background:#fff;border:1px dashed #cbd9d2;border-radius:22px}.mc-empty>span{font-size:35px;color:#6b8f7e}.mc-empty h3{font-size:22px;margin:12px 0 5px}.mc-empty p{color:#718079;font-size:13px;margin:0 0 20px}@media(max-width:900px){.mc-directory-grid{grid-template-columns:1fr;gap:35px}.mc-provider-grid{grid-template-columns:repeat(2,1fr)}.mc-results-head{align-items:start;flex-direction:column}}@media(max-width:600px){.mc-directory-wrap{width:min(100% - 28px,1180px)}.mc-directory-hero{padding-bottom:42px}.mc-breadcrumb{margin-bottom:28px}.mc-directory h1{font-size:42px}.mc-provider-grid{grid-template-columns:1fr}.mc-active-need{overflow:auto}.mc-active-need div{min-width:max-content}.mc-active-need>a{min-width:max-content}.mc-form-row{grid-template-columns:1fr}.mc-directory-main{padding-top:25px}}`}</style>
+  </main>;
 }
