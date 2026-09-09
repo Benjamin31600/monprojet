@@ -5,16 +5,10 @@ export function isLocale(value: string): value is Locale { return locales.includ
 
 export const dictionaries = {
   fr: {
-    nav: {
-      search: "Trouver une garde",
-      subsidized: "Solutions de garde",
-      cpe: "CPE",
-      about: "À propos",
-      cta: "Trouver ma solution",
-    },
-    footer: { tagline: "La garde de votre famille, simplement.", privacy: "Confidentialité", terms: "Conditions", cookies: "Témoins" },
+    nav: { search: "Trouver une garde", need: "Mon besoin", subsidized: "Solutions de garde", cpe: "CPE", about: "À propos", cta: "Trouver ma solution" },
+    footer: { tagline: "La garde de votre famille, simplement.", trust: "Pensé au Québec pour les familles d’ici.", privacy: "Confidentialité", security: "Sécurité", terms: "Conditions", cookies: "Témoins" },
     home: {
-      eyebrow: "Québec · Canada · Garde d’enfants",
+      eyebrow: "Québec · Canada · Vie familiale",
       title: "La garde qui s’adapte à votre famille.",
       intro: "Trouvez une garderie, un CPE ou un service de garde près de chez vous. MyCoco vous aide à trouver une solution qui correspond à votre réalité.",
       location: "Ville ou code postal", age: "Âge de l’enfant", type: "Type de garde", search: "Rechercher",
@@ -28,20 +22,14 @@ export const dictionaries = {
     pages: {
       searchTitle: "Trouvez la bonne solution de garde près de chez vous",
       searchDesc: "Recherchez des garderies, CPE et services de garde en milieu familial selon votre secteur, l’âge de votre enfant et vos besoins.",
-      subsidizedTitle: "Garderies subventionnées au Québec", cpeTitle: "CPE au Québec", aboutTitle: "À propos de MyCoco", privacyTitle: "Politique de confidentialité", termsTitle: "Conditions d’utilisation", cookiesTitle: "Témoins",
+      subsidizedTitle: "Garderies subventionnées au Québec", cpeTitle: "CPE au Québec", aboutTitle: "À propos de MyCoco", privacyTitle: "Politique de confidentialité", termsTitle: "Conditions d’utilisation", cookiesTitle: "Gestion des témoins", securityTitle: "Sécurité et protection des données",
     },
   },
   en: {
-    nav: {
-      search: "Find childcare",
-      subsidized: "Childcare solutions",
-      cpe: "CPE",
-      about: "About",
-      cta: "Find my solution",
-    },
-    footer: { tagline: "Childcare for your family, made simple.", privacy: "Privacy", terms: "Terms", cookies: "Cookies" },
+    nav: { search: "Find childcare", need: "My need", subsidized: "Childcare solutions", cpe: "CPE", about: "About", cta: "Find my solution" },
+    footer: { tagline: "Childcare for your family, made simple.", trust: "Built in Quebec for Canadian families.", privacy: "Privacy", security: "Security", terms: "Terms", cookies: "Cookies" },
     home: {
-      eyebrow: "Quebec · Canada · Childcare",
+      eyebrow: "Quebec · Canada · Family life",
       title: "Childcare that fits your family.",
       intro: "Find a daycare, CPE or childcare service near you. MyCoco helps you find a solution that fits your family.",
       location: "City or postal code", age: "Child’s age", type: "Childcare type", search: "Search",
@@ -55,7 +43,7 @@ export const dictionaries = {
     pages: {
       searchTitle: "Find the right childcare solution near you",
       searchDesc: "Search daycares, CPEs and home daycares by area, child age and childcare needs.",
-      subsidizedTitle: "Subsidized daycares in Quebec", cpeTitle: "CPEs in Quebec", aboutTitle: "About MyCoco", privacyTitle: "Privacy policy", termsTitle: "Terms of use", cookiesTitle: "Cookies",
+      subsidizedTitle: "Subsidized daycares in Quebec", cpeTitle: "CPEs in Quebec", aboutTitle: "About MyCoco", privacyTitle: "Privacy policy", termsTitle: "Terms of use", cookiesTitle: "Cookie management", securityTitle: "Security and data protection",
     },
   },
 } as const;
