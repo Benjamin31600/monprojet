@@ -14,6 +14,7 @@ const demandSchema = z.object({
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
+const MAX_BODY_BYTES = 20_000;
 
 function clientKey(request: NextRequest) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
@@ -32,6 +33,11 @@ function rateLimited(key: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Request too large" }, { status: 413 });
+    }
+
     const origin = request.headers.get("origin");
     if (origin) {
       const expected = new URL(request.url).origin;
