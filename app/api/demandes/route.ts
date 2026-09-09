@@ -30,7 +30,9 @@ function rateLimited(key: string) {
   return current.count > MAX_ATTEMPTS;
 }
 function errorRedirect(request: NextRequest, locale: "fr" | "en", code: string) {
-  const url = new URL(`/${locale}/mon-besoin`, request.url); url.searchParams.set("erreur", code); return NextResponse.redirect(url, 303);
+  const url = new URL(`/${locale}/mon-besoin`, request.url);
+  url.searchParams.set("erreur", code);
+  return NextResponse.redirect(url, 303);
 }
 
 export async function POST(request: NextRequest) {
