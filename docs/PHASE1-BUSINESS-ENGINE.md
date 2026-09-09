@@ -1,49 +1,39 @@
 # MyCoco — Phase 1 Business Engine
 
 ## North star
-Build local childcare demand before monetizing it.
+Build the strongest local childcare demand engine in the Laurentians before expanding categories or trying to maximize revenue.
 
 ## Free for families
-Parents can search and describe their need without paying. MyCoco should not charge for information that is already free through public or provider channels.
+Parents search and describe their need for free. Do not charge for information that is already free through public or provider channels. The value exchange is convenience, matching, alerts and discovery.
 
-## Data we capture with the family request
-- geography / postal sector
+## Data moat
+Capture useful, consent-compatible product signals:
+- city / postal sector
 - child age range
 - childcare preference
 - desired start date
 - acquisition source / medium / campaign
-- aggregate search and matching behavior
+- searches, filters, results and matching behavior
+- active need and return activity
 
-Never sell personal data.
+Never sell personal data. Use aggregated demand intelligence only.
 
-## What becomes monetizable
-1. Qualified provider leads
-2. Provider subscription and workflow tools once ROI is proven
-3. Sponsored visibility, clearly labelled
-4. Booking / transaction fees when MyCoco creates the transaction
-5. Employer family-care benefits
-6. Aggregated market intelligence for providers and partners
+## Phase 1 geography
+Mirabel, Blainville, Boisbriand, Saint-Eustache and Sainte-Thérèse. Win density before expansion.
 
-## Liquidity strategy
-Start with Mirabel, Blainville, Boisbriand, Saint-Eustache and Sainte-Thérèse. Measure active needs by city and age before expanding categories or geography.
+## Flywheel
+SEO / paid acquisition → family need → relevant results → active need → alerts / return visits → more demand → provider outreach → better supply → stronger matching → transactions → revenue.
 
-## Product flywheel
-SEO / paid acquisition → family need → relevant results → active need / alerts → repeat visit → more demand → provider outreach → better supply → stronger matching → transactions → revenue.
+## Monetization later
+1. Qualified provider leads when we can prove demand.
+2. Provider subscriptions for tools / workflow / demand management, not for basic information.
+3. Clearly labelled sponsored visibility.
+4. Booking / transaction fees when MyCoco creates measurable transaction value.
+5. Employer family-care benefits.
+6. Aggregated market intelligence for providers and partners.
 
-## KPI dashboard
-- visits by acquisition source
-- form starts
-- completed needs
-- activation rate
-- active needs by city / age / type
-- match rate
-- provider contact rate
-- repeat visits
-- alert engagement
-- provider activation
-- CAC
-- revenue per active family
-- GMV / take rate when transactions exist
+## KPIs
+Traffic by source, form starts, completed needs, activation rate, active needs by city/age/type, match rate, contact rate, repeat visits, alert engagement, provider activation, CAC, revenue per active family, GMV and take rate when transactions exist.
 
-## Rule
+## Product rule
 Do not build a feature unless it improves acquisition, activation, liquidity, retention, monetization, trust or the data moat.
