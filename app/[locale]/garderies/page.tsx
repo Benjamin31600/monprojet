@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getChildcareData, matchReasons, matchesType, normalize, rankChildcare, typeLabel } from "@/lib/childcare";
-import { cities } from "@/lib/site";
+import { getChildcareData, matchReasons, normalize, rankChildcare, typeLabel } from "@/lib/childcare";
 
 export const dynamic = "force-dynamic";
 
