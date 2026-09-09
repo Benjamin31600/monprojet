@@ -56,7 +56,7 @@ export function matchesType(record: ChildcareRecord, filter: string) {
   if (!filter) return true;
   const f = normalize(filter);
   const n = normalize(record.type);
-  if (f === "cpe" || n.includes("cpe") || n.includes("centre de la petite enfance")) return f === "cpe" ? true : false;
+  if (f === "cpe") return n === "cpe" || n.includes("cpe") || n.includes("centre de la petite enfance");
   if (f.includes("subventionnee") || f.includes("subventionnée")) return n.includes("subvention") && !n.includes("non subvention") && !n.includes("non-subvention");
   if (f.includes("milieu familial")) return n.includes("milieu familial") || n.includes("bureau coordonnateur");
   if (f.includes("non subventionnee") || f.includes("non subventionnée") || f.includes("garderie privee") || f.includes("garderie privée")) return n.includes("non subvention") || n.includes("non-subvention");
