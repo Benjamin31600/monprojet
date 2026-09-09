@@ -8,10 +8,40 @@ const demandSchema = z.object({
   age: z.enum(["0-18", "18-36", "3-5", "5+"]),
   type: z.string().trim().max(80).default(""),
   debut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  website: z.string().max(0).optional().or(z.literal("")),
 });
+
+const attempts = new Map<string, { count: number; resetAt: number }>();
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_ATTEMPTS = 10;
+
+function clientKey(request: NextRequest) {
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+}
+
+function rateLimited(key: string) {
+  const now = Date.now();
+  const current = attempts.get(key);
+  if (!current || current.resetAt <= now) {
+    attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
+    return false;
+  }
+  current.count += 1;
+  return current.count > MAX_ATTEMPTS;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get("origin");
+    if (origin) {
+      const expected = new URL(request.url).origin;
+      if (origin !== expected) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
+    if (rateLimited(clientKey(request))) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "600" } });
+    }
+
     const form = await request.formData();
     const parsed = demandSchema.safeParse({
       locale: form.get("locale") || "fr",
@@ -19,9 +49,10 @@ export async function POST(request: NextRequest) {
       age: form.get("age") || "",
       type: form.get("type") || "",
       debut: form.get("debut") || "",
+      website: form.get("website") || "",
     });
 
-    if (!parsed.success) {
+    if (!parsed.success || parsed.data.website) {
       return NextResponse.json({ error: "Invalid childcare request" }, { status: 400 });
     }
 
@@ -34,9 +65,7 @@ export async function POST(request: NextRequest) {
       source: "mon-besoin",
     });
 
-    if (!result.saved) {
-      return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
-    }
+    if (!result.saved) return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 
     const url = new URL(`/${parsed.data.locale}/garderies`, request.url);
     url.searchParams.set("ville", parsed.data.ville);
