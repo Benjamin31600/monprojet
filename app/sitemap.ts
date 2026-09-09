@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const local = ["fr", "en"].flatMap((locale) =>
     cities.map((city) => ({
-      url: `${site.url}/${locale}/garderie/${city.slug}`,
+      url: `${site.url}/${locale}/garderies/${city.slug}`,
       lastModified: now,
       changeFrequency: "daily" as const,
       priority: 0.9,
