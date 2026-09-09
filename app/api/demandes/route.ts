@@ -31,6 +31,12 @@ function rateLimited(key: string) {
   return current.count > MAX_ATTEMPTS;
 }
 
+function errorRedirect(request: NextRequest, locale: "fr" | "en", code: string) {
+  const url = new URL(`/${locale}/mon-besoin`, request.url);
+  url.searchParams.set("erreur", code);
+  return NextResponse.redirect(url, 303);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const contentLength = Number(request.headers.get("content-length") || 0);
@@ -59,7 +65,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (!parsed.success || parsed.data.website) {
-      return NextResponse.json({ error: "Invalid childcare request" }, { status: 400 });
+      const locale = form.get("locale") === "en" ? "en" : "fr";
+      return errorRedirect(request, locale, "validation");
     }
 
     const result = await saveParentDemand({
@@ -71,7 +78,9 @@ export async function POST(request: NextRequest) {
       source: "mon-besoin",
     });
 
-    if (!result.saved) return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
+    if (!result.saved) {
+      return errorRedirect(request, parsed.data.locale, "configuration");
+    }
 
     const url = new URL(`/${parsed.data.locale}/garderies`, request.url);
     url.searchParams.set("ville", parsed.data.ville);
@@ -82,6 +91,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.redirect(url, 303);
   } catch {
-    return NextResponse.json({ error: "Unable to save childcare request" }, { status: 500 });
+    return errorRedirect(request, "fr", "server");
   }
 }
