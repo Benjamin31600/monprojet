@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cities, site } from "@/lib/site";
+import { site } from "@/lib/site";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -11,32 +11,32 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: raw } = await params;
   if (!isLocale(raw)) return {};
-  const locale = raw as Locale;
-  const fr = locale === "fr";
+  const fr = raw === "fr";
   const title = fr
-    ? "MyCoco | La plateforme des familles et de la garde d'enfants au Québec"
-    : "MyCoco | Family care and childcare platform in Quebec";
+    ? "MyCoco | Trouvez la bonne solution de garde près de chez vous"
+    : "MyCoco | Find childcare that fits your family";
   const description = fr
-    ? "Trouvez une solution de garde, découvrez des activités et construisez votre univers familial avec MyCoco. Une seule plateforme pour les besoins de votre enfant."
-    : "Find childcare, discover activities and build your family care universe with MyCoco. One platform for your child's needs.";
+    ? "Besoin d'une place en garderie? Dites-nous ce qu'il vous faut. MyCoco vous aide à trouver des options de garde pertinentes près de chez vous et à rester à l'affût des nouvelles possibilités."
+    : "Looking for childcare? Tell us what your family needs. MyCoco helps you find relevant childcare options nearby and stay on top of new possibilities.";
   return {
     title,
     description,
-    alternates: {
-      canonical: `/${locale}`,
-      languages: { "fr-CA": "/fr", "en-CA": "/en", "x-default": "/fr" },
-    },
-    openGraph: { locale: fr ? "fr_CA" : "en_CA", alternateLocale: fr ? ["en_CA"] : ["fr_CA"], siteName: site.name, type: "website", title, description },
+    alternates: { canonical: `/${raw}`, languages: { "fr-CA": "/fr", "en-CA": "/en", "x-default": "/fr" } },
+    openGraph: { locale: fr ? "fr_CA" : "en_CA", alternateLocale: fr ? ["en_CA"] : ["fr_CA"], siteName: site.name, type: "website", title, description, url: `${site.url}/${raw}` },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
-function Arrow() {
-  return <span aria-hidden="true">→</span>;
-}
+const cityLinks = [
+  ["Mirabel", "mirabel"],
+  ["Blainville", "blainville"],
+  ["Boisbriand", "boisbriand"],
+  ["Saint-Eustache", "saint-eustache"],
+  ["Sainte-Thérèse", "sainte-therese"],
+] as const;
 
-function Check() {
-  return <span className="mc-check" aria-hidden="true">✓</span>;
-}
+function Arrow() { return <span aria-hidden="true">→</span>; }
+function Check() { return <span className="mc-check" aria-hidden="true">✓</span>; }
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
@@ -44,161 +44,87 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const locale = raw as Locale;
   const fr = locale === "fr";
 
-  const copy = fr
-    ? {
-        eyebrow: "Le nouveau réflexe des familles",
-        title: "Tout ce dont votre famille a besoin, au même endroit.",
-        lead: "Garde, activités, professionnels, événements et solutions de secours : MyCoco construit votre univers familial autour de vos besoins réels.",
-        primary: "Trouver ma solution",
-        secondary: "Explorer les garderies",
-        promise: "Pas seulement trouver une place. Trouver la bonne solution — puis ne plus avoir à chercher seul.",
-        active: "Votre besoin devient actif",
-        activeText: "Dites-nous ce que vous cherchez. MyCoco vous aide à trouver les options pertinentes et pourra vous alerter lorsqu'une nouvelle solution correspond à votre besoin.",
-        ecosystemEyebrow: "Un écosystème, pas un annuaire",
-        ecosystemTitle: "La garde est le début. La famille est notre marché.",
-        ecosystemText: "Nous commençons par résoudre le problème le plus urgent : trouver une solution de garde. Puis nous connectons progressivement les services dont une famille a besoin au fil des années.",
-        categories: [
-          ["🧸", "Garde", "CPE, garderies, milieux familiaux et solutions de garde."],
-          ["🏊", "Activités", "Sports, musique, danse, arts et activités près de chez vous."],
-          ["🧑‍🏫", "Professionnels", "Éducation, développement, accompagnement et services spécialisés."],
-          ["🎟️", "Événements", "Activités familiales, ateliers, portes ouvertes et sorties."],
-          ["🛟", "Garde de secours", "Quand une garderie ferme, qu'un imprévu arrive ou qu'il faut souffler."],
-          ["💼", "Avantages employeur", "Des solutions de garde et de famille pour les salariés."],
-        ],
-        whyEyebrow: "Pourquoi MyCoco",
-        whyTitle: "Une plateforme qui travaille pour vous.",
-        benefits: ["Un seul profil familial", "Des besoins que vous pouvez garder actifs", "Des recommandations plus pertinentes à mesure que MyCoco vous connaît", "Des alertes lorsqu'une opportunité correspond", "Des professionnels et services réunis au même endroit"],
-        localEyebrow: "Commencer près de chez vous",
-        localTitle: "MyCoco commence dans les Laurentides.",
-        localText: "Nous construisons d'abord une offre dense autour de Mirabel, Blainville, Boisbriand, Saint-Eustache et Sainte-Thérèse avant d'étendre le réseau.",
-        finalTitle: "Votre famille change. MyCoco aussi.",
-        finalText: "Aujourd'hui une place en garderie. Demain une activité, un camp, une garde de secours ou un professionnel. Votre besoin évolue, votre espace MyCoco reste avec vous.",
-        finalCta: "Créer mon besoin",
-      }
-    : {
-        eyebrow: "The new family habit",
-        title: "Everything your family needs, in one place.",
-        lead: "Childcare, activities, professionals, events and backup solutions: MyCoco builds a family care universe around your real needs.",
-        primary: "Find my solution",
-        secondary: "Explore childcare",
-        promise: "Not just finding a spot. Finding the right solution — and never having to search alone.",
-        active: "Your need becomes active",
-        activeText: "Tell us what you need. MyCoco helps you find relevant options and can alert you when a new solution matches your needs.",
-        ecosystemEyebrow: "An ecosystem, not a directory",
-        ecosystemTitle: "Childcare is the beginning. Families are our market.",
-        ecosystemText: "We start by solving the most urgent problem: finding childcare. Then we connect the services families need as children grow.",
-        categories: [
-          ["🧸", "Childcare", "CPEs, daycares, home daycares and care solutions."],
-          ["🏊", "Activities", "Sports, music, dance, arts and activities near you."],
-          ["🧑‍🏫", "Professionals", "Education, development, support and specialized services."],
-          ["🎟️", "Events", "Family activities, workshops, open houses and outings."],
-          ["🛟", "Backup care", "When childcare closes, plans change or you need a hand."],
-          ["💼", "Employer benefits", "Family-care solutions for employees and employers."],
-        ],
-        whyEyebrow: "Why MyCoco",
-        whyTitle: "A platform that works for you.",
-        benefits: ["One family profile", "Needs you can keep active", "Better recommendations as MyCoco learns your needs", "Alerts when an opportunity matches", "Professionals and services in one place"],
-        localEyebrow: "Start close to home",
-        localTitle: "MyCoco starts in the Laurentians.",
-        localText: "We are first building a dense network around Mirabel, Blainville, Boisbriand, Saint-Eustache and Sainte-Thérèse before expanding.",
-        finalTitle: "Your family changes. MyCoco changes with you.",
-        finalText: "Today a childcare spot. Tomorrow an activity, camp, backup care or a professional. Your needs evolve, and your MyCoco space stays with you.",
-        finalCta: "Create my need",
-      };
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: site.name,
-    url: `${site.url}/${locale}`,
-    description: copy.lead,
-    inLanguage: fr ? "fr-CA" : "en-CA",
+  const copy = fr ? {
+    navNeed: "Mon besoin", navSearch: "Trouver une garderie", navCta: "Trouver ma solution",
+    eyebrow: "Pensé pour les familles d'ici",
+    title: "Trouver une place, c'est déjà beaucoup. Trouver la bonne, c'est mieux.",
+    lead: "Dites-nous ce dont votre famille a besoin. MyCoco vous aide à repérer les options de garde qui font du sens pour vous, près de chez vous.",
+    primary: "Trouver ma solution", secondary: "Voir les garderies",
+    trust: "Recherche simple · Données officielles · Disponibilité à confirmer",
+    boardTitle: "Votre recherche, sans casse-tête", boardSub: "On part de votre réalité.",
+    need: "Besoin actif", needText: "Bébé · Mirabel · Temps plein", results: "Options pertinentes", resultText: "Triées selon vos critères", radar: "Radar MyCoco", radarText: "Soyez avisé quand une nouvelle option correspond",
+    proofEyebrow: "Une meilleure façon de chercher", proofTitle: "Moins de listes. Plus de clarté.",
+    proofText: "Le Portail d'inscription du Québec est indispensable pour vos démarches. MyCoco vient avant et autour : comprendre votre besoin, repérer les options pertinentes et garder votre recherche active.",
+    proofPoints: ["Vous commencez par votre besoin, pas par une liste interminable.", "Les résultats tiennent compte de votre secteur, du type de garde et de l'âge de votre enfant.", "Votre recherche peut rester active pour ne pas manquer une nouvelle possibilité."],
+    funnelEyebrow: "En quelques minutes", funnelTitle: "Vous nous dites. On vous aide à chercher.",
+    steps: [["01", "Dites-nous ce qu'il vous faut", "Votre ville, l'âge de votre enfant et votre besoin."], ["02", "Découvrez les options", "MyCoco met de l'ordre dans les possibilités près de chez vous."], ["03", "Gardez l'œil ouvert", "Votre besoin reste actif pour suivre les nouvelles options."]] as const,
+    localEyebrow: "On commence localement", localTitle: "Mirabel et les Laurentides d'abord.",
+    localText: "Une marketplace gagne quand elle est utile dans un secteur précis. Nous construisons d'abord une vraie densité de solutions ici, avant d'étendre le réseau au Québec.", localCta: "Chercher près de chez moi",
+    ecosystemEyebrow: "Et après la garde", ecosystemTitle: "Votre famille ne s'arrête pas à la garderie.",
+    ecosystemText: "La garde est notre point de départ. Ensuite viennent les activités, les camps, les événements, les professionnels et les solutions de secours dont les familles ont besoin au fil des années.",
+    ecosystem: [["01", "Garde", "CPE, garderies et milieux familiaux"], ["02", "Activités", "Sports, musique, arts et loisirs"], ["03", "Camps & événements", "Des idées pour les fins de semaine et les congés"], ["04", "Professionnels", "Des services utiles au développement de l'enfant"]] as const,
+    finalTitle: "Votre famille change. Votre recherche aussi.", finalText: "MyCoco veut devenir le réflexe des familles québécoises : une place aujourd'hui, une activité demain, une solution de secours quand la vie ne se passe pas comme prévu.", finalCta: "Commencer ma recherche", footer: "La garde de votre famille, simplement.",
+  } : {
+    navNeed: "My need", navSearch: "Find childcare", navCta: "Find my solution",
+    eyebrow: "Built for local families", title: "Finding a spot is a start. Finding the right fit is better.",
+    lead: "Tell us what your family needs. MyCoco helps you spot childcare options that make sense for your family, close to home.",
+    primary: "Find my solution", secondary: "Browse childcare", trust: "Simple search · Official data · Availability to confirm",
+    boardTitle: "Your search, without the headache", boardSub: "We start with your reality.", need: "Active need", needText: "Baby · Mirabel · Full time", results: "Relevant options", resultText: "Ranked around your needs", radar: "MyCoco Radar", radarText: "Stay in the loop when a new option fits",
+    proofEyebrow: "A better way to search", proofTitle: "Less scrolling. More clarity.", proofText: "Quebec's registration portal is essential for applications. MyCoco sits around that journey: understand your need, spot relevant options and keep your search active.",
+    proofPoints: ["Start with your family's need, not an endless list.", "Results consider your area, childcare type and your child's age.", "Keep your search active so new possibilities don't pass you by."],
+    funnelEyebrow: "A few minutes", funnelTitle: "You tell us. We help you search.",
+    steps: [["01", "Tell us what you need", "Your city, your child's age and your childcare needs."], ["02", "Explore your options", "MyCoco brings structure to the possibilities near you."], ["03", "Stay in the loop", "Keep your need active and watch for new options."]] as const,
+    localEyebrow: "Starting local", localTitle: "Mirabel and the Laurentians first.", localText: "A marketplace wins when it is useful in one place first. We are building density here before expanding across Quebec.", localCta: "Search near me",
+    ecosystemEyebrow: "Beyond childcare", ecosystemTitle: "Family life doesn't stop at daycare.", ecosystemText: "Childcare is our starting point. Then come activities, camps, events, professionals and backup solutions as families grow.",
+    ecosystem: [["01", "Childcare", "CPEs, daycares and home childcare"], ["02", "Activities", "Sports, music, arts and recreation"], ["03", "Camps & events", "Ideas for weekends and school breaks"], ["04", "Professionals", "Useful services for children's development"]] as const,
+    finalTitle: "Your family changes. Your search should too.", finalText: "MyCoco aims to become a daily reflex for Quebec families: childcare today, an activity tomorrow, backup care when life gets complicated.", finalCta: "Start my search", footer: "Childcare that fits your family.",
   };
 
-  return (
-    <main className="mc-home">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <style>{`
-        .mc-home{background:#fbfaf7;color:#17201d;overflow:hidden}
-        .mc-wrap{width:min(1180px,calc(100% - 40px));margin:0 auto}
-        .mc-hero{padding:76px 0 34px;background:radial-gradient(circle at 82% 12%,#e8f5ee 0,rgba(232,245,238,0) 34%),linear-gradient(180deg,#fbfaf7 0,#f4f8f4 100%)}
-        .mc-hero-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:54px;align-items:center}
-        .mc-eyebrow{display:inline-flex;align-items:center;gap:8px;color:#3f725d;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-        .mc-eyebrow:before{content:"";width:8px;height:8px;border-radius:50%;background:#72a98e;box-shadow:0 0 0 5px #e3f0e8}
-        .mc-hero h1{font-size:clamp(44px,6vw,76px);line-height:.98;letter-spacing:-.055em;margin:20px 0 22px;max-width:760px}
-        .mc-lead{font-size:20px;line-height:1.55;color:#52615b;max-width:690px;margin:0}
-        .mc-actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 20px}
-        .mc-primary,.mc-secondary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 22px;border-radius:14px;text-decoration:none;font-weight:800;transition:transform .18s ease,box-shadow .18s ease}
-        .mc-primary{background:#193f32;color:#fff;box-shadow:0 12px 28px rgba(25,63,50,.18)}
-        .mc-secondary{background:#fff;color:#193f32;border:1px solid #dbe5df}
-        .mc-primary:hover,.mc-secondary:hover{transform:translateY(-2px)}
-        .mc-promise{font-size:14px;line-height:1.5;color:#66736e;margin:0;max-width:600px}
-        .mc-dashboard{background:#fff;border:1px solid #dfe8e3;border-radius:28px;padding:24px;box-shadow:0 24px 70px rgba(29,57,46,.12);transform:rotate(1deg)}
-        .mc-dashboard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-        .mc-avatar{width:42px;height:42px;border-radius:14px;background:#e6f2eb;display:grid;place-items:center;font-size:20px}
-        .mc-status{font-size:12px;font-weight:800;color:#3f725d;background:#edf7f1;border-radius:999px;padding:7px 10px}
-        .mc-dashboard h2{font-size:25px;letter-spacing:-.03em;margin:0 0 7px}
-        .mc-muted{color:#718078;font-size:13px;margin:0}
-        .mc-need{margin-top:18px;padding:16px;border-radius:18px;background:#f5f8f5;border:1px solid #e2ebe5}
-        .mc-need-row{display:flex;justify-content:space-between;gap:12px;align-items:center}
-        .mc-need strong{font-size:14px}.mc-dot{width:9px;height:9px;border-radius:50%;background:#65a883;display:inline-block;margin-right:7px}
-        .mc-mini-card{margin-top:12px;padding:14px;background:#fff;border-radius:15px;border:1px solid #e5ebe7;display:flex;justify-content:space-between;gap:12px;align-items:center}
-        .mc-mini-card b{font-size:13px}.mc-mini-card span{font-size:12px;color:#6f7c76}
-        .mc-section{padding:94px 0}.mc-section-soft{background:#f1f6f2}
-        .mc-section-head{max-width:760px;margin-bottom:34px}.mc-section h2{font-size:clamp(34px,4.5vw,56px);line-height:1.02;letter-spacing:-.045em;margin:14px 0 14px}.mc-section-head p{font-size:18px;line-height:1.6;color:#5d6a64;margin:0}
-        .mc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-        .mc-card{background:#fff;border:1px solid #e0e8e3;border-radius:22px;padding:24px;min-height:205px}.mc-card-icon{font-size:29px}.mc-card h3{font-size:21px;letter-spacing:-.025em;margin:18px 0 8px}.mc-card p{color:#68756f;line-height:1.55;margin:0;font-size:14px}
-        .mc-split{display:grid;grid-template-columns:.85fr 1.15fr;gap:60px;align-items:center}.mc-checks{display:grid;gap:13px}.mc-check-row{display:flex;gap:11px;align-items:flex-start;font-weight:700}.mc-check{width:23px;height:23px;flex:none;border-radius:50%;background:#e4f1e9;color:#3f725d;display:grid;place-items:center;font-size:13px}
-        .mc-activation{background:#193f32;color:#fff;border-radius:30px;padding:34px}.mc-activation h3{font-size:28px;letter-spacing:-.035em;margin:0 0 9px}.mc-activation p{color:#cfe0d7;line-height:1.55;margin:0}.mc-activation a{display:inline-flex;margin-top:22px;color:#193f32;background:#fff;padding:12px 16px;border-radius:12px;text-decoration:none;font-weight:800}
-        .mc-cities{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.mc-city{background:#fff;border:1px solid #dce7e0;border-radius:999px;padding:10px 14px;text-decoration:none;color:#25483b;font-weight:700;font-size:14px}
-        .mc-final{padding:82px 0 100px;background:#193f32;color:#fff}.mc-final-inner{max-width:800px}.mc-final h2{font-size:clamp(40px,6vw,70px);line-height:.98;letter-spacing:-.055em;margin:14px 0 18px}.mc-final p{font-size:18px;line-height:1.6;color:#cfe0d7}.mc-final a{margin-top:22px;display:inline-flex;background:#fff;color:#193f32;border-radius:14px;padding:14px 20px;text-decoration:none;font-weight:800}
-        @media(max-width:850px){.mc-hero-grid,.mc-split{grid-template-columns:1fr}.mc-dashboard{transform:none}.mc-grid{grid-template-columns:1fr 1fr}.mc-section{padding:70px 0}}
-        @media(max-width:560px){.mc-wrap{width:min(100% - 28px,1180px)}.mc-hero{padding-top:48px}.mc-grid{grid-template-columns:1fr}.mc-dashboard{padding:18px;border-radius:22px}.mc-hero h1{font-size:45px}.mc-lead{font-size:17px}.mc-section h2{font-size:39px}}
-      `}</style>
+  const jsonLd = { "@context": "https://schema.org", "@type": "WebSite", name: site.name, url: `${site.url}/${locale}`, description: copy.lead, inLanguage: fr ? "fr-CA" : "en-CA", areaServed: { "@type": "AdministrativeArea", name: "Quebec", containedInPlace: { "@type": "Country", name: "Canada" } } };
 
-      <section className="mc-hero">
-        <div className="mc-wrap mc-hero-grid">
-          <div>
-            <span className="mc-eyebrow">{copy.eyebrow}</span>
-            <h1>{copy.title}</h1>
-            <p className="mc-lead">{copy.lead}</p>
-            <div className="mc-actions">
-              <Link className="mc-primary" href={`/${locale}/mon-besoin`}>{copy.primary} <Arrow /></Link>
-              <Link className="mc-secondary" href={`/${locale}/garderies`}>{copy.secondary}</Link>
-            </div>
-            <p className="mc-promise">{copy.promise}</p>
-          </div>
-          <div className="mc-dashboard" aria-label={fr ? "Aperçu de l'espace famille MyCoco" : "Preview of the MyCoco family space"}>
-            <div className="mc-dashboard-top"><div className="mc-avatar">🧸</div><span className="mc-status">● {fr ? "Besoin actif" : "Active need"}</span></div>
-            <h2>{fr ? "Votre famille, vos solutions." : "Your family, your solutions."}</h2>
-            <p className="mc-muted">{fr ? "Un espace qui évolue avec vos besoins." : "A space that evolves with your needs."}</p>
-            <div className="mc-need"><div className="mc-need-row"><strong><span className="mc-dot" />{fr ? "Recherche de garde" : "Childcare search"}</strong><span className="mc-muted">{fr ? "Mirabel" : "Mirabel"}</span></div><div className="mc-mini-card"><div><b>{fr ? "Nouvelle solution à surveiller" : "New solution to watch"}</b><br/><span>{fr ? "Correspond à vos critères" : "Matches your criteria"}</span></div><span>→</span></div><div className="mc-mini-card"><div><b>{fr ? "Activités près de vous" : "Activities near you"}</b><br/><span>{fr ? "Votre prochain besoin" : "Your next need"}</span></div><span>→</span></div></div>
-          </div>
-        </div>
-      </section>
+  return <main className="mc-home">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <style>{`
+      .mc-home{--ink:#18352c;--muted:#63736c;--line:#dce8e1;--soft:#f3f7f4;--mint:#e3f1e9;--cream:#fcfbf7;--accent:#76a991;background:var(--cream);color:var(--ink);overflow:hidden}
+      .mc-wrap{width:min(1160px,calc(100% - 40px));margin:0 auto}.mc-nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px}.mc-brand{font-size:24px;font-weight:900;letter-spacing:-.055em;color:var(--ink);text-decoration:none}.mc-brand span{color:#77a88f}.mc-navlinks{display:flex;align-items:center;gap:26px}.mc-navlinks a{font-size:14px;font-weight:750;color:#53645d;text-decoration:none}.mc-navlinks a:hover{color:var(--ink)}.mc-navcta{background:var(--ink)!important;color:#fff!important;border-radius:12px;padding:11px 15px}
+      .mc-hero{border-top:1px solid #eef2ef;background:radial-gradient(circle at 78% 16%,#e4f2ea 0,rgba(228,242,234,0) 34%),linear-gradient(180deg,var(--cream),#f5f8f5)}.mc-hero-grid{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(350px,.74fr);gap:70px;align-items:center;padding:74px 0 86px}.mc-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#4c7a65}.mc-eyebrow:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px #e1efe8}.mc-hero h1{font-size:clamp(44px,6.1vw,76px);line-height:.98;letter-spacing:-.065em;max-width:790px;margin:19px 0 23px}.mc-lead{font-size:19px;line-height:1.6;color:var(--muted);max-width:680px;margin:0}.mc-actions{display:flex;flex-wrap:wrap;gap:11px;margin:29px 0 15px}.mc-primary,.mc-secondary{min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:13px;padding:0 20px;text-decoration:none;font-weight:850;transition:transform .18s ease,box-shadow .18s ease}.mc-primary{background:var(--ink);color:#fff;box-shadow:0 14px 30px rgba(24,53,44,.16)}.mc-secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}.mc-primary:hover,.mc-secondary:hover{transform:translateY(-2px)}.mc-trust{font-size:12px;color:#74817b;margin:0}
+      .mc-visual{position:relative}.mc-orbit{position:absolute;inset:-24px -35px auto auto;width:150px;height:150px;border-radius:50%;background:#e4f1ea;z-index:0}.mc-board{position:relative;z-index:1;background:#fff;border:1px solid #dce8e1;border-radius:28px;padding:24px;box-shadow:0 28px 80px rgba(26,55,45,.13)}.mc-board-head{display:flex;justify-content:space-between;align-items:flex-start}.mc-mark{width:45px;height:45px;border-radius:15px;background:var(--mint);display:grid;place-items:center;font-size:22px}.mc-pill{background:#edf7f1;color:#4c7a65;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.mc-board h2{font-size:25px;letter-spacing:-.04em;margin:20px 0 5px}.mc-board-sub{font-size:13px;color:#74817b;margin:0}.mc-board-card{border:1px solid #e3ebe6;border-radius:17px;padding:15px;margin-top:12px}.mc-board-label{font-size:11px;color:#7a8781;text-transform:uppercase;letter-spacing:.06em;font-weight:850}.mc-board-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}.mc-board-row strong{font-size:14px}.mc-board-row span{font-size:12px;color:#697871}.mc-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#69a786;margin-right:6px}.mc-board-footer{margin-top:14px;padding-top:14px;border-top:1px solid #edf1ef;display:flex;align-items:center;gap:10px;font-size:12px;color:#687770}
+      .mc-section{padding:88px 0}.mc-soft{background:var(--soft)}.mc-head{max-width:760px;margin-bottom:36px}.mc-head h2{font-size:clamp(36px,4.8vw,58px);line-height:1;letter-spacing:-.055em;margin:13px 0 15px}.mc-head p{font-size:18px;line-height:1.62;color:var(--muted);margin:0}.mc-proof{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.mc-proof-box{background:#fff;border:1px solid var(--line);border-radius:25px;padding:28px;box-shadow:0 18px 50px rgba(30,57,47,.07)}.mc-proof-box strong{font-size:17px}.mc-points{display:grid;gap:15px;margin-top:25px}.mc-point{display:flex;gap:12px;align-items:flex-start;font-weight:750;font-size:15px;line-height:1.45}.mc-check{width:23px;height:23px;flex:none;border-radius:50%;background:var(--mint);color:#4c7a65;display:grid;place-items:center;font-size:12px;font-weight:900}
+      .mc-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.mc-step{background:#fff;border:1px solid var(--line);border-radius:22px;padding:25px;min-height:190px}.mc-num{font-size:12px;font-weight:900;color:#6c8f7e}.mc-step h3{font-size:21px;letter-spacing:-.025em;margin:33px 0 8px}.mc-step p{font-size:14px;line-height:1.55;color:var(--muted);margin:0}
+      .mc-local{background:var(--ink);color:#fff}.mc-local-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:65px;align-items:center}.mc-local .mc-eyebrow{color:#a9cdb9}.mc-local .mc-head p{color:#c5d6cf}.mc-citygrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mc-city{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:15px;padding:16px;color:#fff;text-decoration:none;font-weight:800;display:flex;justify-content:space-between;transition:background .18s ease,transform .18s ease}.mc-city:hover{background:rgba(255,255,255,.12);transform:translateY(-2px)}
+      .mc-ecosystem{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mc-eco{padding:22px;border-radius:20px;background:#fff;border:1px solid var(--line)}.mc-eco small{font-weight:900;color:#79a18e}.mc-eco h3{font-size:19px;margin:28px 0 7px;letter-spacing:-.025em}.mc-eco p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}.mc-final{padding:88px 0 100px;background:#e4f1ea}.mc-final-inner{max-width:780px}.mc-final h2{font-size:clamp(42px,6vw,70px);line-height:.98;letter-spacing:-.06em;margin:13px 0 17px}.mc-final p{font-size:18px;line-height:1.6;color:#5f7169;margin:0}.mc-final a{display:inline-flex;margin-top:25px;background:var(--ink);color:#fff;border-radius:13px;padding:14px 19px;text-decoration:none;font-weight:850}.mc-footer{padding:25px 0;border-top:1px solid var(--line);font-size:13px;color:#75827c}.mc-footer-row{display:flex;justify-content:space-between;gap:20px;align-items:center}.mc-footer-brand{font-weight:900;color:var(--ink)}
+      @media(max-width:900px){.mc-hero-grid,.mc-proof,.mc-local-grid{grid-template-columns:1fr;gap:38px}.mc-ecosystem{grid-template-columns:1fr 1fr}.mc-steps{grid-template-columns:1fr}.mc-navlinks a:not(.mc-navcta){display:none}.mc-hero-grid{padding:55px 0 70px}}@media(max-width:580px){.mc-wrap{width:min(100% - 28px,1160px)}.mc-nav{height:68px}.mc-navcta{padding:10px 12px;font-size:12px}.mc-hero h1{font-size:45px}.mc-lead{font-size:17px}.mc-section{padding:66px 0}.mc-head h2{font-size:40px}.mc-ecosystem{grid-template-columns:1fr}.mc-citygrid{grid-template-columns:1fr}.mc-board{padding:18px;border-radius:22px}}@media(prefers-reduced-motion:reduce){.mc-primary,.mc-secondary,.mc-city{transition:none}}
+    `}</style>
 
-      <section className="mc-section mc-section-soft">
-        <div className="mc-wrap">
-          <div className="mc-section-head"><span className="mc-eyebrow">{copy.ecosystemEyebrow}</span><h2>{copy.ecosystemTitle}</h2><p>{copy.ecosystemText}</p></div>
-          <div className="mc-grid">{copy.categories.map(([icon,title,text]) => <article className="mc-card" key={title}><div className="mc-card-icon">{icon}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
-        </div>
-      </section>
+    <header className="mc-wrap mc-nav">
+      <Link href={`/${locale}`} className="mc-brand">My<span>Coco</span></Link>
+      <nav className="mc-navlinks" aria-label="Navigation principale">
+        <Link href={`/${locale}/mon-besoin`}>{copy.navNeed}</Link>
+        <Link href={`/${locale}/garderies`}>{copy.navSearch}</Link>
+        <Link className="mc-navcta" href={`/${locale}/mon-besoin`}>{copy.navCta}</Link>
+      </nav>
+    </header>
 
-      <section className="mc-section">
-        <div className="mc-wrap mc-split">
-          <div><span className="mc-eyebrow">{copy.whyEyebrow}</span><h2>{copy.whyTitle}</h2><p className="mc-lead" style={{fontSize:17}}>{copy.activeText}</p></div>
-          <div className="mc-activation"><h3>{copy.active}</h3><p>{copy.activeText}</p><Link href={`/${locale}/mon-besoin`}>{copy.primary} <Arrow /></Link></div>
-        </div>
-      </section>
+    <section className="mc-hero"><div className="mc-wrap mc-hero-grid"><div>
+      <span className="mc-eyebrow">{copy.eyebrow}</span><h1>{copy.title}</h1><p className="mc-lead">{copy.lead}</p>
+      <div className="mc-actions"><Link className="mc-primary" href={`/${locale}/mon-besoin`}>{copy.primary} <Arrow /></Link><Link className="mc-secondary" href={`/${locale}/garderies`}>{copy.secondary}</Link></div>
+      <p className="mc-trust">{copy.trust}</p>
+    </div><div className="mc-visual" aria-hidden="true"><div className="mc-orbit"/><div className="mc-board">
+      <div className="mc-board-head"><div className="mc-mark">🧸</div><span className="mc-pill">MyCoco Radar</span></div><h2>{copy.boardTitle}</h2><p className="mc-board-sub">{copy.boardSub}</p>
+      <div className="mc-board-card"><div className="mc-board-label">{copy.need}</div><div className="mc-board-row"><strong>{copy.needText}</strong><span><i className="mc-live"/>Actif</span></div></div>
+      <div className="mc-board-card"><div className="mc-board-label">{copy.results}</div><div className="mc-board-row"><strong>{copy.resultText}</strong><span>3 options</span></div></div>
+      <div className="mc-board-footer">✦ <span>{copy.radar}</span> · {copy.radarText}</div>
+    </div></div></div></section>
 
-      <section className="mc-section mc-section-soft">
-        <div className="mc-wrap mc-split">
-          <div><span className="mc-eyebrow">{copy.localEyebrow}</span><h2>{copy.localTitle}</h2><p className="mc-section-head" style={{fontSize:17,color:"#5d6a64"}}>{copy.localText}</p><div className="mc-cities">{cities.map((city) => <Link className="mc-city" href={`/${locale}/garderie/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div></div>
-          <div className="mc-card"><h3 style={{marginTop:0}}>{fr ? "Une famille. Plusieurs besoins. Un seul endroit." : "One family. Many needs. One place."}</h3><div className="mc-checks">{copy.benefits.map((benefit) => <div className="mc-check-row" key={benefit}><Check /> <span>{benefit}</span></div>)}</div></div>
-        </div>
-      </section>
+    <section className="mc-section"><div className="mc-wrap mc-proof"><div className="mc-head"><span className="mc-eyebrow">{copy.proofEyebrow}</span><h2>{copy.proofTitle}</h2><p>{copy.proofText}</p></div><div className="mc-proof-box"><strong>{fr ? "Ce qu'on veut vous éviter" : "What we want to save you from"}</strong><div className="mc-points">{copy.proofPoints.map((point) => <div className="mc-point" key={point}><Check/><span>{point}</span></div>)}</div></div></div></section>
 
-      <section className="mc-final"><div className="mc-wrap mc-final-inner"><span className="mc-eyebrow" style={{color:"#b8d6c6"}}>{fr ? "La vision MyCoco" : "The MyCoco vision"}</span><h2>{copy.finalTitle}</h2><p>{copy.finalText}</p><Link href={`/${locale}/mon-besoin`}>{copy.finalCta} <Arrow /></Link></div></section>
-    </main>
-  );
+    <section className="mc-section mc-soft"><div className="mc-wrap"><div className="mc-head"><span className="mc-eyebrow">{copy.funnelEyebrow}</span><h2>{copy.funnelTitle}</h2></div><div className="mc-steps">{copy.steps.map(([num,title,text]) => <article className="mc-step" key={num}><span className="mc-num">{num}</span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
+
+    <section className="mc-section mc-local"><div className="mc-wrap mc-local-grid"><div className="mc-head"><span className="mc-eyebrow">{copy.localEyebrow}</span><h2>{copy.localTitle}</h2><p>{copy.localText}</p><div className="mc-actions"><Link className="mc-secondary" href={`/${locale}/garderies`}>{copy.localCta} <Arrow/></Link></div></div><div className="mc-citygrid">{cityLinks.map(([name,slug]) => <Link className="mc-city" key={slug} href={`/${locale}/garderies/${slug}`}><span>{name}</span><Arrow/></Link>)}</div></div></section>
+
+    <section className="mc-section"><div className="mc-wrap"><div className="mc-head"><span className="mc-eyebrow">{copy.ecosystemEyebrow}</span><h2>{copy.ecosystemTitle}</h2><p>{copy.ecosystemText}</p></div><div className="mc-ecosystem">{copy.ecosystem.map(([num,title,text]) => <article className="mc-eco" key={num}><small>{num}</small><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
+
+    <section className="mc-final"><div className="mc-wrap mc-final-inner"><span className="mc-eyebrow">MyCoco</span><h2>{copy.finalTitle}</h2><p>{copy.finalText}</p><Link href={`/${locale}/mon-besoin`}>{copy.finalCta} <Arrow/></Link></div></section>
+    <footer className="mc-footer"><div className="mc-wrap mc-footer-row"><span className="mc-footer-brand">MyCoco</span><span>{copy.footer}</span></div></footer>
+  </main>;
 }
