@@ -1,9 +1,9 @@
 export const site = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "MyCoco",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://monprojetgarde.vercel.app",
-  tagline: "La garde de votre famille, simplement.",
+  tagline: "La garde qui s’adapte à votre famille.",
   description:
-    "Trouvez une garderie, un CPE ou une solution de garde au Québec. MyCoco aide les familles à trouver la bonne solution, puis à découvrir les services utiles autour de l’enfant.",
+    "MyCoco aide les familles à trouver la bonne solution de garde au Québec. Commencez par votre besoin, découvrez les options pertinentes et gardez votre recherche active.",
   locale: "fr_CA",
   country: "CA",
   region: "Quebec",
