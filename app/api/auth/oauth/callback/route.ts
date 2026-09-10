@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
-import { createFamilyAccount, hashPassword, startFamilySession } from "@/lib/family-auth";
-import { setProviderSession } from "@/lib/providerAuth";
+import { createFamilyAccount, startFamilySession } from "@/lib/family-auth";
+import { hashPassword, setProviderSession } from "@/lib/providerAuth";
 
 const STATE_COOKIE = "mycoco_oauth_state";
 const VERIFIER_COOKIE = "mycoco_oauth_verifier";
@@ -25,8 +25,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const decoded = Buffer.from(packed, "base64url").toString("utf8");
-    const [state, roleRaw, localeRaw, returnRaw, mac] = decoded.split("|");
-    if (!state || !roleRaw || !localeRaw || !returnRaw || !mac) throw new Error("invalid state");
+    const parts = decoded.split("|");
+    if (parts.length !== 5) throw new Error("invalid state");
+    const [state, roleRaw, localeRaw, returnRaw, mac] = parts;
     const payload = `${state}|${roleRaw}|${localeRaw}|${returnRaw}`;
     const expected = sign(payload);
     if (mac.length !== expected.length || !timingSafeEqual(Buffer.from(mac), Buffer.from(expected)) || state !== returnedState) throw new Error("state mismatch");
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         if (!created.ok) throw new Error(created.reason);
         accountId = String(created.account.id);
       }
-      if (!(await startFamilySession(accountId))) throw new Error("family session failed");
+      if (!await startFamilySession(accountId)) throw new Error("family session failed");
     } else {
       const existing = await sql`SELECT id FROM provider_accounts WHERE email = ${email} LIMIT 1`;
       let accountId: string;
@@ -69,11 +70,11 @@ export async function GET(request: NextRequest) {
         const display = nameFromUser(user);
         const slugBase = display.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "service";
         const slug = `${slugBase}-${randomBytes(3).toString("hex")}`;
-        const provider = await sql`INSERT INTO providers (slug, name, provider_type, city, source, claimed, verified, updated_at) VALUES (${slug}, ${display}, 'private_daycare', 'À compléter', 'oauth-registration', true, false, now()) RETURNING id`;
-        const account = await sql`INSERT INTO provider_accounts (provider_id, email, password_hash) VALUES (${provider[0].id}, ${email}, ${hashPassword(randomBytes(32).toString("base64url"))}) RETURNING id`;
-        accountId = String(account[0].id);
+        const providerRows = await sql`INSERT INTO providers (slug, name, provider_type, city, source, claimed, verified, updated_at) VALUES (${slug}, ${display}, 'private_daycare', 'À compléter', 'oauth-registration', true, false, now()) RETURNING id`;
+        const accountRows = await sql`INSERT INTO provider_accounts (provider_id, email, password_hash) VALUES (${providerRows[0].id}, ${email}, ${hashPassword(randomBytes(32).toString("base64url"))}) RETURNING id`;
+        accountId = String(accountRows[0].id);
       }
-      if (!(await setProviderSession(accountId))) throw new Error("provider session failed");
+      await setProviderSession(accountId);
     }
     const response = NextResponse.redirect(new URL(returnTo, request.url));
     response.cookies.delete(STATE_COOKIE); response.cookies.delete(VERIFIER_COOKIE);
