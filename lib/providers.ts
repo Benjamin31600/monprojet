@@ -55,5 +55,12 @@ export async function createProviderLead(input: {
     RETURNING id
   `;
 
+  await sql`
+    INSERT INTO provider_messages
+      (provider_id, parent_demand_id, sender_type, sender_name, subject, body)
+    VALUES
+      (${input.providerId}, ${input.parentDemandId || null}, 'family', 'Une famille MyCoco', 'Une famille est intéressée par votre service', 'Une famille vient de signaler son intérêt pour votre service sur MyCoco. Consultez votre espace service pour suivre cette demande.')
+  `;
+
   return { saved: true as const, id: rows[0]?.id as string | undefined };
 }
