@@ -38,7 +38,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <Link href={`/${locale}/comment-ca-marche`}>{fr ? "Comment ça marche" : "How it works"}</Link>
           <Link href={`/${locale}/a-propos`}>{fr ? "À propos" : "About"}</Link>
           <Link className="mc-lang" href={`/${other}`}>{other.toUpperCase()}</Link>
-          <Link className="mc-header-login" href={`/${locale}/pour-les-services`}>{fr ? "Espace service" : "Provider space"}</Link>
+          <Link className="mc-header-login" href={`/${locale}/espace-service`}>{fr ? "Espace service" : "Provider space"}</Link>
           <Link className="mc-header-action" href={`/${locale}/mon-besoin`}>{fr ? "Trouver ma garde" : "Find childcare"}<span>→</span></Link>
         </nav>
         <details className="mc-mobile-nav">
@@ -47,8 +47,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <span>{fr ? "FAMILLES" : "FAMILIES"}</span>
             <Link className="mc-mobile-primary" href={`/${locale}/mon-besoin`}>{fr ? "Trouver ma garde" : "Find childcare"}<span>→</span></Link>
             <Link href={`/${locale}/garderies`}>{fr ? "Parcourir les services" : "Browse providers"}</Link>
+            <Link href={`/${locale}/espace-famille`}>{fr ? "Mon espace famille" : "My family space"}</Link>
             <span>{fr ? "SERVICES" : "PROVIDERS"}</span>
-            <Link href={`/${locale}/pour-les-services`}>{fr ? "Créer mon espace service" : "Create provider space"}</Link>
+            <Link href={`/${locale}/espace-service`}>{fr ? "Créer mon espace service" : "Create provider space"}</Link>
+            <Link href={`/${locale}/pour-les-services`}>{fr ? "Pourquoi MyCoco pour les services" : "Why MyCoco for providers"}</Link>
             <span>{fr ? "MYCOCO" : "MYCOCO"}</span>
             <Link href={`/${locale}/comment-ca-marche`}>{fr ? "Comment ça marche" : "How it works"}</Link>
             <Link href={`/${locale}/a-propos`}>{fr ? "À propos" : "About"}</Link>
@@ -62,9 +64,9 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <div className="mc-footer-inner">
         <div><Link className="mc-footer-brand" href={`/${locale}`}>my<span>coco</span></Link><p>{fr ? "La garde qui s'adapte à votre famille." : "Childcare that fits your family."}</p><small>{d.footer.trust}</small></div>
         <div className="mc-footer-columns">
-          <div><strong>{fr ? "Familles" : "Families"}</strong><Link href={`/${locale}/mon-besoin`}>{fr ? "Trouver une garde" : "Find childcare"}</Link><Link href={`/${locale}/garderies`}>{fr ? "Parcourir les services" : "Browse providers"}</Link></div>
-          <div><strong>{fr ? "Services" : "Providers"}</strong><Link href={`/${locale}/pour-les-services`}>{fr ? "Créer mon espace" : "Create my space"}</Link><Link href={`/${locale}/comment-ca-marche`}>{fr ? "Comment ça marche" : "How it works"}</Link></div>
-          <div><strong>MyCoco</strong><Link href={`/${locale}/a-propos`}>{fr ? "À propos" : "About"}</Link><Link href={`/${locale}/confidentialite`}>{d.footer.privacy}</Link><Link href={`/${locale}/securite`}>{d.footer.security}</Link><Link href={`/${locale}/conditions`}>{d.footer.terms}</Link></div>
+          <div><strong>{fr ? "Familles" : "Families"}</strong><Link href={`/${locale}/mon-besoin`}>{fr ? "Trouver une garde" : "Find childcare"}</Link><Link href={`/${locale}/garderies`}>{fr ? "Parcourir les services" : "Browse providers"}</Link><Link href={`/${locale}/espace-famille`}>{fr ? "Mon espace famille" : "My family space"}</Link></div>
+          <div><strong>{fr ? "Services" : "Providers"}</strong><Link href={`/${locale}/espace-service`}>{fr ? "Créer mon espace" : "Create my space"}</Link><Link href={`/${locale}/pour-les-services`}>{fr ? "Pourquoi MyCoco" : "Why MyCoco"}</Link></div>
+          <div><strong>MyCoco</strong><Link href={`/${locale}/a-propos`}>{fr ? "À propos" : "About"}</Link><Link href={`/${locale}/comment-ca-marche`}>{fr ? "Comment ça marche" : "How it works"}</Link><Link href={`/${locale}/confidentialite`}>{d.footer.privacy}</Link><Link href={`/${locale}/securite`}>{d.footer.security}</Link><Link href={`/${locale}/conditions`}>{d.footer.terms}</Link></div>
         </div>
       </div>
     </footer>
