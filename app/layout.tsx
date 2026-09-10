@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import "./globals.css";
 import "./mycoco.css";
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "MyCoco | Trouver la bonne solution de garde au Québec", description: site.description },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = (await headers()).get("x-mycoco-locale") === "en-CA" ? "en-CA" : "fr-CA";
   const jsonLd = { "@context":"https://schema.org", "@type":"WebSite", name:"MyCoco", alternateName:"MyCoco Childcare", url:site.url, description:site.description, inLanguage:["fr-CA","en-CA"], areaServed:{"@type":"AdministrativeArea",name:"Quebec",containedInPlace:{"@type":"Country",name:"Canada"}}, potentialAction:{"@type":"SearchAction",target:`${site.url}/fr/garderies?ville={search_term_string}`,"query-input":"required name=search_term_string"} };
-  return <html lang="fr-CA"><body><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}} />{children}</body></html>;
+  return <html lang={locale}><body><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}} />{children}</body></html>;
 }

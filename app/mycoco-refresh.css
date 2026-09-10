@@ -4,3 +4,24 @@ body .mc-nav-desktop{font-size:.875rem;gap:16px}body .mc-nav-cta,body .mc-site-c
 @media(prefers-reduced-motion:no-preference){.coco-hero-grid>div{animation:coco-enter .6s ease-out both}.coco-search{animation-delay:.12s!important}.coco-button,.coco-provider,.coco-cities a{transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease}.coco-button:hover,.coco-provider:hover{transform:translateY(-3px)}@keyframes coco-enter{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}}
 @media(max-width:1100px){body .mc-nav-desktop{display:none}body .mc-nav-mobile{display:block}}
 @media(max-width:800px){.coco-hero-grid,.coco-provider-pitch,.coco-faq{grid-template-columns:1fr;gap:36px}.coco-hero{padding:42px 0 56px}.coco-search{max-width:540px}.coco-section{padding-block:54px}.coco-providers,.coco-steps{grid-template-columns:1fr}.coco-heading{display:block}.coco-band>div{display:grid;grid-template-columns:1fr 1fr}.coco-wrap{width:calc(100% - 36px)}.coco-search{padding:24px;box-shadow:6px 8px 0 #e3f49a}.coco-final{padding:54px 0}.coco-refresh h1{font-size:clamp(2.5rem,10vw,4rem)}}
+/* Shared design system for discovery, accounts, provider and editorial screens. */
+body{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#103f38}
+body .mc-signup-v8,body .mc-login-v8,body .mc-auth-page,body .mc-standard-hero,body .mc-search-hero{background:#f4f8f0;color:#103f38}
+body .mc-signup-intro h1,body .mc-login-grid>section:first-child h1,body .mc-auth-intro h1{font-size:clamp(2.2rem,4.5vw,3.8rem);line-height:1.12;letter-spacing:-.04em}
+body .mc-onboarding,body .mc-login-card,body .mc-auth-card{border-radius:20px;background:#fff;box-shadow:0 12px 40px #103f3810;border:1px solid #c9d8cf}
+body .mc-onboarding input,body .mc-onboarding select,body .mc-login-card input{font-size:1rem;min-height:50px}
+body .mc-onboarding section>p,body .mc-onboarding-info p,body .mc-provider-body p{font-size:1rem;line-height:1.65}
+body .mc-onboarding-next,body .mc-login-card form button,body .mc-auth-card button,body .mc-directory-filters button{background:#c7442c!important;color:#fff;font-size:1rem;min-height:50px;border-radius:12px}
+body .mc-onboarding-head small,body .mc-login-note,body .mc-login-forgot a,body .mc-onboarding-foot,body .mc-signup-reassure,body .mc-login-mini span{font-size:.875rem;color:#49665b}
+body .mc-onboarding-info,body .mc-onboarding-number{background:#eef6d8}
+body .mc-onboarding-choice-grid button{font-size:.875rem;line-height:1.5;padding:14px 28px 14px 14px}
+body .mc-role-switch,body .mc-login-switch{flex-wrap:wrap;border-radius:16px}
+body .mc-login-switch a,body .mc-role-switch a{min-height:44px;display:flex;align-items:center;font-size:.875rem}
+body .mc-signup-top>div,body .mc-login-top>a:last-child{font-size:.875rem}
+body .mc-provider-body small,body .mc-provider-foot,body .mc-reasons,body .mc-disclaimer{font-size:.875rem}
+body .mc-nav-mobile a,body .mc-mega summary{min-height:44px;display:flex;align-items:center}
+body .mc-nav-v2 .mc-nav-inner{height:auto;min-height:76px;padding-block:10px}
+body .mc-foot-cols{gap:28px}
+body .mc-auth-error{padding:16px;border:1px solid #d7a397;background:#fff3ef;border-radius:12px;color:#862f20;font-size:1rem}
+@media(prefers-reduced-motion:no-preference){.mc-onboarding section,.mc-wizard-step{animation:coco-enter .22s ease-out both}}
+@media(max-width:600px){body .mc-signup-grid,body .mc-login-grid{gap:28px}body .mc-onboarding section{min-height:0;padding-bottom:28px}body .mc-signup-benefits{display:none}body .mc-signup-top{gap:16px;align-items:flex-start}body .mc-login-top{gap:16px}}

@@ -43,7 +43,7 @@ export function verifySession(value: string | undefined) {
   const parts = value.split(".");
   if (parts.length !== 3) return null;
   const [accountId, exp, signature] = parts;
-  if (!accountId || !exp || !signature || Number(exp) < Date.now()) return null;
+  if (!accountId || !exp || !signature || !Number.isFinite(Number(exp)) || Number(exp) < Date.now()) return null;
   const expected = sign(`${accountId}.${exp}`);
   if (expected.length !== signature.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return null;
   return accountId;

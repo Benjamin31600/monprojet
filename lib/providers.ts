@@ -14,11 +14,11 @@ export async function ensureProvider(record: ChildcareRecord) {
   const rows = await sql`
     INSERT INTO providers
       (slug, name, provider_type, city, address, postal_code, phone, latitude, longitude,
-       capacity_total, capacity_services, source, source_updated_at, updated_at)
+       capacity_total, source, source_updated_at, updated_at)
     VALUES
       (${record.slug}, ${record.name}, ${record.type}, ${record.city}, ${record.address || null},
        ${record.postalCode || null}, ${record.phone || null}, ${record.latitude}, ${record.longitude},
-       ${record.capacityTotal || null}, ${record.capacityServices || []}, ${record.source || null},
+       ${record.capacityTotal || null}, ${record.source || null},
        ${record.sourceUpdatedAt || null}, now())
     ON CONFLICT (slug) DO UPDATE SET
       name = EXCLUDED.name,
@@ -30,7 +30,6 @@ export async function ensureProvider(record: ChildcareRecord) {
       latitude = EXCLUDED.latitude,
       longitude = EXCLUDED.longitude,
       capacity_total = EXCLUDED.capacity_total,
-      capacity_services = EXCLUDED.capacity_services,
       source = EXCLUDED.source,
       source_updated_at = EXCLUDED.source_updated_at,
       updated_at = now()

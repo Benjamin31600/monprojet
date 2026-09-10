@@ -28,3 +28,17 @@ Aucun changement en base, aucune migration de plateforme et aucune fusion en pro
 
 ## Vérifications avant fusion
 Installer les dépendances et lancer le build du dépôt. Contrôler /fr et /en, le menu mobile, la recherche directe, les quatre étapes du formulaire, les erreurs, l’annuaire vide, les fiches et le parcours prestataire. Vérifier le consentement analytics et les connexions avec des comptes de test avant de qualifier le tunnel de complet.
+
+
+## Seconde passe : fiabilité des comptes et référence Care.com
+Référence confirmée par Benjamin : Care.com (et non « café »). Consultation de https://www.care.com/en-ca/ refusée par le site (HTTP 429) : aucune analyse détaillée de son parcours actuel revendiquée.
+
+Correction majeure : OnboardingSignup n’envoyait ni email, ni mot de passe, ni nom au serveur. Ces valeurs sont maintenant transmises pour les deux rôles. Erreurs visibles sur l’inscription, destinations locales validées, chemin du mot de passe oublié corrigé. Création compte/profil et service/compte regroupée en une requête atomique. Garde d’origine sur les routes d’authentification. Les erreurs d’envoi de courriel ne produisent plus de succès fictif.
+
+SEO : suppression des entrées inexistantes du sitemap, suppression de la canonical d’accueil héritée par les sous-pages, canoniques spécifiques pour les principales pages publiques, noindex sur les espaces privés, langue HTML transmise par le middleware. Cela rend le layout racine dynamique : vérifier le coût et le cache après build.
+
+Design : tailles de texte relevées sur les pages actives, interlignage corrigé, style commun des contrôles, transitions respectant reduced-motion, accès prestataire direct depuis le premier écran.
+
+Preuves : deux tests de redirection exécutés avec Node 24 et réussis ; git diff --check réussi. Schéma de la base Neon nommée mycoco (morning-cherry-33059514) inspecté en lecture seule : colonnes d’inscription présentes. Le champ capacity_services, absent du schéma lu, a été retiré de ensureProvider. Aucune donnée personnelle consultée ni modifiée.
+
+Blocages : le compte Vercel connecté retourne zéro projet, et le déploiement projet-garde.vercel.app retourne 404 via ce compte. Impossible de confirmer quelle base est réellement configurée en production. Installation hors ligne échoue faute de cache, après le blocage réseau initial. Build, TypeScript, rendu mobile/desktop, OAuth et inscription de bout en bout restent non vérifiés. La couverture anti-abus distribuée et le flux de récupération de mot de passe prestataire restent à compléter avant lancement commercial. La refonte reste un brouillon et n’est pas une validation de production.

@@ -1,3 +1,5 @@
+import { guardAuthRequest } from "@/lib/auth-request";
+import { safeReturnTo } from "@/lib/safe-redirect";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createFamilyAccount, startFamilySession } from "@/lib/family-auth";
@@ -23,10 +25,14 @@ function parseJson(value: string | undefined, fallback: unknown) {
 }
 
 export async function POST(request: NextRequest) {
+  const rejected = guardAuthRequest(request);
+  if (rejected) return rejected;
+  let locale: "fr" | "en" = "fr";
+  try {
   const form = await request.formData();
   const parsed = schema.safeParse(Object.fromEntries(form.entries()));
-  const locale = form.get("locale") === "en" ? "en" : "fr";
-  const returnTo = typeof form.get("returnTo") === "string" && form.get("returnTo") ? String(form.get("returnTo")) : `/${locale}/espace-famille`;
+  locale = form.get("locale") === "en" ? "en" : "fr";
+  const returnTo = safeReturnTo(form.get("returnTo"), `/${locale}/espace-famille`);
   if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/inscription?role=family&erreur=validation`, request.url), 303);
 
   const result = await createFamilyAccount({
@@ -42,4 +48,7 @@ export async function POST(request: NextRequest) {
   }
   await startFamilySession(result.account.id);
   return NextResponse.redirect(new URL(returnTo, request.url), 303);
+  } catch {
+    return NextResponse.redirect(new URL(`/${locale}/inscription?role=family&erreur=server`, request.url), 303);
+  }
 }
