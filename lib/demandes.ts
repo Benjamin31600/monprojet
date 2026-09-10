@@ -7,6 +7,7 @@ export type ParentDemand = {
   childcareType: string;
   desiredStartDate: string | null;
   source: string;
+  familyAccountId?: string | null;
 };
 
 function getSql() {
@@ -18,7 +19,6 @@ function getSql() {
 export async function saveParentDemand(demand: ParentDemand) {
   const sql = getSql();
   if (!sql) return { saved: false, reason: "database_not_configured" as const };
-
   try {
     const rows = await sql`
       INSERT INTO parent_demands
@@ -27,18 +27,16 @@ export async function saveParentDemand(demand: ParentDemand) {
         (${demand.locale}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || ""}, ${demand.desiredStartDate || null}, ${demand.source})
       RETURNING id
     `;
-
     try {
       await sql`
         INSERT INTO family_searches
-          (city_or_postal, age_range, childcare_type, desired_start_date, source)
+          (family_account_id, city_or_postal, age_range, childcare_type, desired_start_date, source)
         VALUES
-          (${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || null}, ${demand.desiredStartDate || null}, ${demand.source})
+          (${demand.familyAccountId || null}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || null}, ${demand.desiredStartDate || null}, ${demand.source})
       `;
     } catch (secondaryError) {
       console.error("MyCoco: unable to mirror family search", secondaryError);
     }
-
     return { saved: true as const, id: rows[0]?.id as string | undefined };
   } catch (error) {
     console.error("MyCoco: unable to save parent demand", error);
