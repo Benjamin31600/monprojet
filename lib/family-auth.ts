@@ -46,28 +46,21 @@ export async function createFamilyAccount(input: {
   const email = normalizeEmail(input.email);
   const passwordHash = hashPassword(input.password);
   try {
-    const rows = await sql`
-      INSERT INTO family_accounts (email, password_hash, first_name, last_name, phone, locale)
-      VALUES (${email}, ${passwordHash}, ${input.firstName.trim()}, ${input.lastName?.trim() || null}, ${input.phone?.trim() || null}, ${input.locale})
-      RETURNING id, email, first_name, last_name, phone, locale
-    `;
-    const account = rows[0];
     const childrenJson = JSON.stringify(input.children ?? []);
     const preferencesJson = JSON.stringify(input.preferences ?? {});
-    await sql`
-      INSERT INTO family_profiles (family_account_id, email, first_name, last_name, phone, locale, city_or_postal, children, preferences)
-      VALUES (${account.id}, ${account.email}, ${account.first_name}, ${account.last_name}, ${account.phone}, ${account.locale}, ${input.profileCity?.trim() || input.postalCode?.trim() || null}, ${childrenJson}::jsonb, ${preferencesJson}::jsonb)
-      ON CONFLICT (family_account_id) DO UPDATE SET
-        email = EXCLUDED.email,
-        first_name = EXCLUDED.first_name,
-        last_name = EXCLUDED.last_name,
-        phone = EXCLUDED.phone,
-        locale = EXCLUDED.locale,
-        city_or_postal = EXCLUDED.city_or_postal,
-        children = EXCLUDED.children,
-        preferences = EXCLUDED.preferences,
-        updated_at = now()
+    const rows = await sql`
+      WITH account AS (
+        INSERT INTO family_accounts (email, password_hash, first_name, last_name, phone, locale)
+        VALUES (${email}, ${passwordHash}, ${input.firstName.trim()}, ${input.lastName?.trim() || null}, ${input.phone?.trim() || null}, ${input.locale})
+        RETURNING id, email, first_name, last_name, phone, locale
+      ), profile AS (
+        INSERT INTO family_profiles (family_account_id, email, first_name, last_name, phone, locale, city_or_postal, children, preferences)
+        SELECT id, email, first_name, last_name, phone, locale,
+          ${input.profileCity?.trim() || input.postalCode?.trim() || null}, ${childrenJson}::jsonb, ${preferencesJson}::jsonb
+        FROM account RETURNING family_account_id
+      ) SELECT account.* FROM account JOIN profile ON profile.family_account_id = account.id
     `;
+    const account = rows[0];
     return { ok: true as const, account };
   } catch (error: unknown) {
     const message = String(error);
@@ -140,9 +133,9 @@ export async function createPasswordReset(emailInput: string) {
   const from = process.env.RESEND_FROM_EMAIL;
   if (resendKey && from) {
     const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ from, to: [account.email], subject: "Réinitialiser votre mot de passe MyCoco", html: `<p>Bonjour ${account.first_name},</p><p>Vous avez demandé à réinitialiser votre mot de passe MyCoco.</p><p><a href="${resetUrl}">Réinitialiser mon mot de passe</a></p><p>Ce lien expire dans 1 heure.</p>` }) });
-    if (!response.ok) console.error("MyCoco: reset email failed", await response.text());
+    if (!response.ok) return { ok: false as const, reason: "email_unavailable" as const };
   } else {
-    console.warn("MyCoco: password reset email is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL.");
+    return { ok: false as const, reason: "email_unavailable" as const };
   }
   return { ok: true as const };
 }

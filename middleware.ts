@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign"] as const;
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-mycoco-locale", request.nextUrl.pathname.split("/")[1] === "en" ? "en-CA" : "fr-CA");
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   let changed = false;
 
   for (const key of UTM_KEYS) {

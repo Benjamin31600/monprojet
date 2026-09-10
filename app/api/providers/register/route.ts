@@ -1,3 +1,5 @@
+import { guardAuthRequest } from "@/lib/auth-request";
+import { safeReturnTo } from "@/lib/safe-redirect";
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
@@ -28,7 +30,12 @@ function slugify(value: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const rejected = guardAuthRequest(request);
+  if (rejected) return rejected;
+  let locale = "fr";
+  try {
   const form = await request.formData();
+  locale = form.get("locale") === "en" ? "en" : "fr";
   const parsed = schema.safeParse({
     locale: form.get("locale") || "fr",
     returnTo: form.get("returnTo") || "",
@@ -43,9 +50,9 @@ export async function POST(request: NextRequest) {
     website: form.get("website") || "",
     capacity: form.get("capacity") || undefined,
   });
-  if (!parsed.success) return NextResponse.json({ error: "Informations invalides" }, { status: 400 });
+  if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=validation`, request.url), 303);
   const sql = db();
-  if (!sql) return NextResponse.json({ error: "La base de données n'est pas configurée." }, { status: 503 });
+  if (!sql) return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=server`, request.url), 303);
 
   const email = parsed.data.email.toLowerCase();
   const existing = await sql`SELECT id FROM provider_accounts WHERE email = ${email} LIMIT 1`;
@@ -56,17 +63,21 @@ export async function POST(request: NextRequest) {
 
   const baseSlug = slugify(parsed.data.name);
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
-  const provider = await sql`
+  const passwordHash = hashPassword(parsed.data.password);
+  const account = await sql`
+    WITH provider AS (
     INSERT INTO providers (slug, name, provider_type, city, address, postal_code, phone, website, capacity_total, source, claimed, verified, updated_at)
     VALUES (${slug}, ${parsed.data.name}, ${parsed.data.providerType}, ${parsed.data.city}, ${parsed.data.address || null}, ${parsed.data.postalCode || null}, ${parsed.data.phone || null}, ${parsed.data.website || null}, ${parsed.data.capacity ?? null}, 'provider-registration', true, false, now())
     RETURNING id
-  `;
-  const account = await sql`
+    )
     INSERT INTO provider_accounts (provider_id, email, password_hash)
-    VALUES (${provider[0].id}, ${email}, ${hashPassword(parsed.data.password)})
+    SELECT id, ${email}, ${passwordHash} FROM provider
     RETURNING id
   `;
   await setProviderSession(account[0].id as string);
-  const destination = parsed.data.returnTo || `/${parsed.data.locale}/espace-service`;
+  const destination = safeReturnTo(parsed.data.returnTo, `/${parsed.data.locale}/espace-service`);
   return NextResponse.redirect(new URL(destination, request.url), 303);
+  } catch {
+    return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=server`, request.url), 303);
+  }
 }
