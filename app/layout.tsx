@@ -3,6 +3,7 @@ import "./globals.css";
 import "./mycoco.css";
 import "./mycoco-redesign.css";
 import "./mycoco-pages.css";
+import "./mycoco-refresh.css";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
