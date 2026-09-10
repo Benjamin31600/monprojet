@@ -5,12 +5,13 @@ import { site } from "@/lib/site";
 import { getDictionary, isLocale, locales, type Locale } from "@/lib/i18n";
 import FunnelTracker from "@/components/FunnelTracker";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import PolishStyles from "@/components/PolishStyles";
 
 export function generateStaticParams(){return locales.map(locale=>({locale}));}
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{const{locale:raw}=await params;if(!isLocale(raw))return{};const locale=raw as Locale;const fr=locale==='fr';const title=fr?"MyCoco | Trouver la bonne solution de garde":"MyCoco | Find the right childcare solution";const description=fr?"Découvrez, comparez et connectez-vous aux services de garde qui correspondent à votre famille.":"Discover, compare and connect with childcare services that fit your family.";const verification=process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;return{title:{default:title,template:`%s | MyCoco`},description,alternates:{canonical:`/${locale}`,languages:{"fr-CA":"/fr","en-CA":"/en","x-default":"/fr"}},openGraph:{locale:fr?"fr_CA":"en_CA",siteName:site.name,type:"website",title,description,url:`${site.url}/${locale}`},robots:{index:true,follow:true},verification:verification?{google:verification}:undefined};}
 
 export default async function LocaleLayout({children,params}:{children:React.ReactNode;params:Promise<{locale:string}>}){const{locale:raw}=await params;if(!isLocale(raw))notFound();const locale=raw as Locale;const fr=locale==='fr';const other=fr?'en':'fr';const d=getDictionary(locale);const organizationJsonLd={"@context":"https://schema.org","@type":"Organization","name":"MyCoco","url":site.url,"description":site.description,"areaServed":{"@type":"AdministrativeArea","name":"Québec"},"sameAs":[]};return <>
-<FunnelTracker/><GoogleAnalytics/>
+<FunnelTracker/><GoogleAnalytics/><PolishStyles/>
 <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(organizationJsonLd)}} />
 <a className="skip-link" href="#main-content">{fr?"Aller au contenu principal":"Skip to main content"}</a>
 <header className="mc-global-header"><div className="mc-global-inner">
