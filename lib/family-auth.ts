@@ -29,7 +29,18 @@ export function verifyPassword(password: string, encoded: string) {
 
 function hashToken(token: string) { return createHash("sha256").update(token).digest("hex"); }
 
-export async function createFamilyAccount(input: { email: string; password: string; firstName: string; lastName?: string; phone?: string; locale: "fr" | "en" }) {
+export async function createFamilyAccount(input: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  locale: "fr" | "en";
+  profileCity?: string;
+  postalCode?: string;
+  children?: unknown;
+  preferences?: unknown;
+}) {
   const sql = sqlClient();
   if (!sql) return { ok: false as const, reason: "database_not_configured" as const };
   const email = normalizeEmail(input.email);
@@ -41,7 +52,22 @@ export async function createFamilyAccount(input: { email: string; password: stri
       RETURNING id, email, first_name, last_name, phone, locale
     `;
     const account = rows[0];
-    await sql`INSERT INTO family_profiles (family_account_id) VALUES (${account.id}) ON CONFLICT (family_account_id) DO NOTHING`;
+    const childrenJson = JSON.stringify(input.children ?? []);
+    const preferencesJson = JSON.stringify(input.preferences ?? {});
+    await sql`
+      INSERT INTO family_profiles (family_account_id, email, first_name, last_name, phone, locale, city_or_postal, children, preferences)
+      VALUES (${account.id}, ${account.email}, ${account.first_name}, ${account.last_name}, ${account.phone}, ${account.locale}, ${input.profileCity?.trim() || input.postalCode?.trim() || null}, ${childrenJson}::jsonb, ${preferencesJson}::jsonb)
+      ON CONFLICT (family_account_id) DO UPDATE SET
+        email = EXCLUDED.email,
+        first_name = EXCLUDED.first_name,
+        last_name = EXCLUDED.last_name,
+        phone = EXCLUDED.phone,
+        locale = EXCLUDED.locale,
+        city_or_postal = EXCLUDED.city_or_postal,
+        children = EXCLUDED.children,
+        preferences = EXCLUDED.preferences,
+        updated_at = now()
+    `;
     return { ok: true as const, account };
   } catch (error: unknown) {
     const message = String(error);
