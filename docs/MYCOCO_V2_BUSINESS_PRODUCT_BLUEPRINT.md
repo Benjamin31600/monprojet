@@ -60,6 +60,239 @@ Le parent ne crée pas librement une fiche enfant depuis une place publique. Il 
 - Signalement absence/retard.
 - Gestion des personnes autorisées à récupérer l'enfant.
 
+## Module santé & sécurité — indispensable
+MyCoco doit devenir le canal officiel de traçabilité des informations santé utiles, sans se substituer à un professionnel de santé.
+
+### Ce que la nounou peut déclarer aux parents
+- Fièvre avec température, heure de mesure et méthode de prise si pertinente.
+- Vomissement, diarrhée, toux importante, congestion, éruption cutanée, fatigue inhabituelle, douleur signalée, difficulté à manger ou boire.
+- Chute, coup, morsure, égratignure, réaction allergique, incident de jeu.
+- Refus de manger, hydratation faible ou changement notable de comportement.
+- Administration d'un médicament autorisé, avec heure, dose, nom du produit et adulte responsable.
+- Besoin de venir chercher l'enfant.
+- Recommandation de rester à la maison selon la politique du service.
+- Retour à la normale / état amélioré.
+
+### Workflow santé
+- Sélection de l'enfant.
+- Type d'événement santé.
+- Heure automatique.
+- Température facultative.
+- Symptômes structurés + note libre.
+- Niveau: information / à surveiller / parent à contacter / récupération demandée / urgence.
+- Photo facultative si adaptée et consentie.
+- Notification parent sans exposer le détail médical dans l'écran verrouillé.
+- Accusé de lecture parent.
+- Historique horodaté non modifiable sans trace d'audit.
+
+### Rappels réglementaires intégrés
+- Autorisation écrite pour les médicaments quand requise.
+- Protocoles applicables pour acétaminophène, insectifuge et autres exceptions prévues.
+- Journal d'administration des médicaments.
+- Rapports d'incident à signer/accuser réception.
+- Contacts d'urgence et personnes autorisées accessibles hors ligne en mode sécurité prévu ultérieurement.
+
+## Absences, vacances et fermetures
+### Côté parent
+- Déclarer absence aujourd'hui.
+- Déclarer absence future.
+- Motif facultatif: maladie, rendez-vous, vacances, autre.
+- Déclarer retard d'arrivée.
+- Déclarer départ anticipé.
+- Indiquer qui viendra récupérer l'enfant.
+- Répondre à un sondage vacances.
+- Demander une journée supplémentaire si le service l'autorise.
+
+### Côté nounou / RSGE
+- Calendrier annuel des vacances de la nounou.
+- Jours fériés et fermetures exceptionnelles.
+- Fermeture maladie / urgence / météo.
+- Message collectif automatique aux familles concernées.
+- Accusé de lecture.
+- Décompte des jours fermés selon paramètres du contrat.
+- Vue capacité par jour selon absences et vacances déclarées.
+
+### Automatisations utiles
+- Si un enfant n'est pas présent X minutes après son horaire habituel, demander au parent de confirmer présence/absence.
+- Relance d'un sondage vacances non répondu.
+- Rappel 7 jours puis 24 h avant fermeture planifiée.
+- Réaffectation automatique des places temporaires dans une future offre de garde de dépannage.
+
+## Fiche enfant complète
+### Identité
+- Prénom, nom, date de naissance, photo facultative.
+- Langue(s) parlée(s), prénom préféré.
+- Fratrie présente dans le même service.
+
+### Santé
+- Allergies et niveau de gravité.
+- Épipen ou autre dispositif d'urgence.
+- Conditions diagnostiquées utiles à la garde.
+- Médicaments réguliers.
+- Médecin / clinique si nécessaire.
+- Régime alimentaire médical ou religieux, sans catégorisation intrusive inutile.
+
+### Habitudes
+- Sommeil, heure habituelle de sieste, doudou, suce.
+- Repas, textures, aliments aimés/refusés.
+- Toilette / couches / apprentissage de la propreté.
+- Rituels d'apaisement.
+- Sensibilités sensorielles utiles.
+
+### Sécurité
+- Parents/tuteurs liés.
+- Contacts d'urgence.
+- Personnes autorisées à récupérer l'enfant.
+- Personnes explicitement non autorisées, avec traitement juridique prudent.
+- Mot de passe / code de récupération optionnel.
+
+### Consentements
+- Photos privées.
+- Vidéos privées.
+- Sorties à pied.
+- Transport véhicule si applicable.
+- Crème solaire.
+- Insectifuge.
+- Premiers soins / urgence selon cadre légal.
+- Médicaments et protocoles séparés.
+
+## Journal quotidien enrichi
+- Arrivée / départ.
+- Repas + quantité approximative.
+- Collations.
+- Eau / hydratation si utile.
+- Sieste début / fin.
+- Couche sèche / mouillée / selles.
+- Toilette.
+- Activité pédagogique.
+- Jeu extérieur.
+- Humeur / énergie.
+- Observation éducative.
+- Photo/vidéo privée.
+- Santé / incident.
+- À apporter demain.
+- Note de fin de journée.
+
+La nounou doit pouvoir appliquer une action à plusieurs enfants à la fois puis ajuster les exceptions individuellement.
+
+## Communication moderne
+- Conversation privée par enfant/famille.
+- Annonces de groupe.
+- Annonces à toutes les familles.
+- Messages programmés.
+- Confirmation de lecture.
+- Pièces jointes.
+- Réponses rapides enregistrées.
+- Traduction assistée plus tard.
+- SMS de secours uniquement pour alertes critiques ou familles non actives.
+
+## Planning & capacité
+- Planning semaine et mois.
+- Horaire habituel de chaque enfant.
+- Exceptions ponctuelles.
+- Présence prévue vs réelle.
+- Vacances enfant.
+- Vacances nounou.
+- Fermetures.
+- Capacité restante.
+- Liste d'attente privée simplifiée.
+- Demande de journée supplémentaire.
+- Garde de dépannage future pour créneaux libérés.
+
+## Finance — futur moteur de revenu
+### MVP
+- Montant hebdomadaire ou quotidien.
+- Échéance.
+- Payé / non payé / partiellement payé.
+- Rappel automatique.
+- Historique.
+- Reçu simple.
+
+### V1/V2
+- Factures automatiques hebdomadaires / bihebdomadaires / mensuelles.
+- Paiement en ligne via partenaire.
+- Paiement automatique optionnel.
+- Frais de retard configurables lorsque permis et prévus contractuellement.
+- Reçus fiscaux / relevés selon faisabilité réglementaire.
+- Export comptable.
+- Tableau de bord encaissements.
+- Échec de paiement + relance.
+
+## Fonction "À apporter"
+Catégories rapides:
+- Couches.
+- Lingettes.
+- Crème.
+- Vêtements de rechange.
+- Bottes / chaussures.
+- Chapeau.
+- Mitaines.
+- Bouteille / gourde.
+- Lait ou préparation si prévu.
+- Doudou / suce.
+- Document à signer.
+- Médicament / renouvellement d'autorisation.
+
+Chaque demande peut avoir quantité, priorité, date limite et rappel automatique.
+
+## Fonction événements
+- Sortie au parc.
+- Fête thématique.
+- Photo de groupe.
+- Journée pyjama.
+- Anniversaire.
+- Fermeture.
+- Vacances de la RSGE.
+- Rendez-vous parent-service.
+- Activité spéciale.
+- Date de renouvellement d'un document.
+
+Les événements peuvent demander une réponse: vu / participe / autorise / refuse / à signer.
+
+## Différenciation stratégique
+Planitou, Amisgest, Brightwheel et Famly prouvent que le besoin existe. MyCoco doit se différencier par:
+- Onboarding en moins de 10 minutes.
+- Mobile-first réel pour RSGE et petites structures.
+- UX beaucoup plus simple que les suites historiques.
+- Automatisations proactives centrées sur les oublis réels.
+- Assistant quotidien "Que dois-je faire maintenant ?".
+- Vue parent ultra synthétique.
+- Tarification transparente et faible friction.
+- Acquisition virale par invitation.
+- Architecture prête pour garde de dépannage et marketplace locale sans polluer le coeur produit.
+
+## Machine à cash — architecture de revenus
+### 1. SaaS récurrent provider
+Le revenu principal doit venir du service de garde, pas des parents.
+
+### 2. Paiements
+Une fois la confiance acquise, commission ou frais fixe par transaction via un partenaire de paiement, en respectant les règles applicables.
+
+### 3. Add-ons premium
+- SMS critiques.
+- Stockage photo étendu.
+- Signature avancée.
+- Automatisations supplémentaires.
+- Exports avancés.
+- Multi-utilisateurs.
+- Rapports réglementaires.
+
+### 4. Marketplace à forte marge plus tard
+- Remplacement / garde de dépannage.
+- Activités enfants locales.
+- Photographes.
+- Formations RSGE.
+- Assurance / partenaires professionnels appropriés.
+- Fournitures pour garderies via affiliation B2B.
+
+Ne pas lancer cette marketplace avant d'avoir une base active suffisante.
+
+### 5. Offre annuelle
+Proposer -15 à -20 % sur paiement annuel pour améliorer la trésorerie et réduire le churn.
+
+### 6. Freemium calibré
+Le gratuit doit démontrer la valeur mais devenir naturellement limité dès qu'une vraie activité démarre. Éviter un forfait gratuit assez généreux pour rester gratuit indéfiniment.
+
 ## Modèle économique initial
 Les parents restent gratuits pour accélérer l'adoption.
 
@@ -116,6 +349,9 @@ Les prix sont des hypothèses à tester avec 10 à 20 services de garde avant co
 - Rappels qui évitent les oublis et les messages manuels.
 - Automatisation des tâches répétitives.
 - Invitations parents qui créent un effet réseau local.
+- Gestion de santé/incident avec traçabilité.
+- Absences/vacances/fermetures sans appels ni SMS dispersés.
+- Paiements et documents au même endroit.
 
 ## Design system
 Le produit doit évoquer l'enfance sans ressembler à un jouet.
@@ -156,10 +392,10 @@ Le dashboard doit toujours répondre à trois questions: que se passe-t-il maint
 
 ## Roadmap
 ### MVP bêta
-Invitation, comptes adultes, enfant, allergies/urgence, journal, planning, messages, besoins matériels, événements, notifications, paiement dû/non payé.
+Invitation, comptes adultes, enfant, allergies/urgence, journal, planning, messages, besoins matériels, événements, notifications, paiement dû/non payé, absences/vacances, calendrier fermetures, santé/fièvre, incident simple.
 
 ### V1 commerciale
-Présence arrivée/départ, photos, documents/consentements, rapports incident, rappels automatiques, abonnement provider, exports.
+Présence arrivée/départ, photos, documents/consentements, rapports incident, médicaments autorisés, rappels automatiques, abonnement provider, exports, sondages vacances, confirmations de lecture.
 
 ### V2
-Paiements des frais de garde, signatures avancées, équipe multi-éducatrices, statistiques, intégrations et marketplace secondaire.
+Paiements des frais de garde, facturation automatique, signatures avancées, équipe multi-éducatrices, statistiques, intégrations, garde de dépannage et marketplace secondaire.
