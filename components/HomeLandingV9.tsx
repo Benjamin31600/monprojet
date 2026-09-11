@@ -1,111 +1,138 @@
 import Link from "next/link";
 import { type Locale } from "@/lib/i18n";
-import { getChildcareData, typeLabel } from "@/lib/childcare";
 
-export default async function HomeLandingV9({ locale }: { locale: Locale }) {
+export default function HomeLandingV9({ locale }: { locale: Locale }) {
   const fr = locale === "fr";
-  const data = await getChildcareData();
-  const featured = data.records.filter((record) => record.city).slice(0, 6);
 
   const t = fr ? {
-    eyebrow: "MYCOCO · TROUVER UNE GARDE PLUS SIMPLEMENT",
-    title: "Trouvez rapidement une garde qui correspond vraiment à votre famille.",
-    lead: "Garderies, CPE, milieux familiaux et nounous : décrivez votre besoin, découvrez des annonces pertinentes près de chez vous et gardez votre recherche au même endroit.",
-    primary: "Trouver ma garde gratuitement",
-    secondary: "Voir les annonces",
-    proof: ["Recherche gratuite", "Annonces locales", "Alertes dans votre espace"],
-    listingsEyebrow: "ANNONCES À DÉCOUVRIR",
-    listingsTitle: "Voyez tout de suite le type de services que vous pouvez trouver sur MyCoco.",
-    listingsText: "Les fiches issues des données publiques restent clairement identifiées. Les services inscrits peuvent ensuite enrichir leur annonce avec leur présentation, leurs disponibilités, leurs activités, leurs tarifs et leurs photos.",
-    seeListing: "Voir l’annonce",
-    howTitle: "Vous dites ce que vous cherchez. MyCoco vous aide à trouver quoi contacter.",
-    how: [
-      ["01", "Décrivez votre besoin", "Ville, âge de l’enfant, type de garde et date souhaitée."],
-      ["02", "Comparez les annonces", "Repérez les services qui correspondent le mieux à votre situation."],
-      ["03", "Gardez le fil", "Créez votre espace pour retrouver vos demandes, recevoir des alertes et relancer votre recherche."],
-    ],
-    providerEyebrow: "VOUS ÊTES UN SERVICE DE GARDE ?",
-    providerTitle: "Transformez votre fiche en une annonce qui donne envie de vous contacter.",
-    providerText: "Présentez votre approche, vos activités, vos jours disponibles, vos horaires, vos tarifs et, dès que votre annonce est complète, vos photos. MyCoco est pensé pour vous apporter des demandes plus pertinentes, pas seulement des visites.",
-    providerCta: "Créer mon annonce gratuitement",
-    familyTitle: "Votre recherche ne disparaît plus dans vos onglets et vos captures d’écran.",
-    familyText: "Dans votre espace famille, vous pourrez retrouver vos recherches, suivre depuis quand elles sont actives, les relancer, conserver vos annonces préférées et recevoir des alertes lorsque de nouvelles solutions correspondent à vos critères.",
-    familyCta: "Créer mon espace famille",
-    aboutTitle: "MyCoco est né d’un problème simple : trouver une garde demande trop de temps.",
-    aboutText: "Notre objectif n’est pas de créer un annuaire de plus. Nous construisons une plateforme qui rapproche les besoins réels des familles et les services disponibles, avec une expérience plus claire, plus locale et plus utile.",
-    aboutCta: "Pourquoi MyCoco",
-    finalTitle: "Commencez par votre besoin. Pas par une liste interminable.",
+    eyebrow: "MYCOCO · GARDE D’ENFANTS, SIMPLEMENT",
+    title: "Trouvez la garde qui correspond vraiment à votre famille.",
+    lead: "MyCoco rapproche les familles et les services de garde selon ce qui compte vraiment : distance, âge, horaires, disponibilités, langues et besoins de votre enfant.",
+    primary: "Trouver une garde",
+    provider: "Je suis un service de garde",
+    proof: ["Gratuit pour les familles", "Matching personnalisé", "Disponibilités mises à jour"],
+    matchTitle: "Un résultat utile, pas une liste infinie.",
+    matchText: "Chaque service est comparé à vos critères essentiels et à vos préférences pour vous aider à prioriser les meilleures options.",
+    criteriaTitle: "Votre enfant est plus qu’un âge et un code postal.",
+    criteriaText: "Les critères obligatoires permettent de trouver une solution compatible. Les critères facultatifs affinent ensuite le matching sans compliquer la recherche.",
+    basics: "Essentiels",
+    basicsItems: ["Ville ou code postal", "Âge de l’enfant", "Date de début", "Jours et horaires", "Type de garde"],
+    preferences: "Préférences",
+    preferencesItems: ["Allergies et repas", "Animaux", "Langues parlées", "Langue souhaitée pour l’enfant", "Activités préférées", "Siestes et habitudes"],
+    liveTitle: "Une place se libère ? Le service la met à jour immédiatement.",
+    liveText: "Les professionnels gèrent leurs places restantes, leurs horaires et leurs critères d’accueil depuis leur espace. Dès qu’un enfant est accueilli, la capacité restante peut être ajustée pour éviter les informations périmées.",
+    providerTitle: "Un espace professionnel pensé pour gérer, pas seulement pour être visible.",
+    providerText: "Le service peut compléter sa fiche, préciser ses disponibilités, ses langues, ses activités, ses repas, ses règles d’accueil et suivre les familles qui correspondent à son offre.",
+    childTitle: "Un vrai dossier enfant pour éviter de tout répéter.",
+    childText: "Prénom, allergies, repas, activités préférées, siestes, langues, habitudes et informations utiles : la famille garde les données essentielles organisées dans son espace et choisit ce qu’elle partage.",
+    ecosystemEyebrow: "PLUS QU’UN ANNUAIRE",
+    ecosystemTitle: "MyCoco devient l’écosystème des familles et des professionnels de l’enfance.",
+    ecosystemText: "La garde est le point de départ. Demain : activités, camps, événements, professionnels, solutions de secours et services utiles autour de l’enfant — avec le même profil famille et la même logique de confiance.",
+    familyCta: "Commencer gratuitement",
+    providerCta: "Créer mon espace professionnel",
   } : {
-    eyebrow: "MYCOCO · FIND CHILDCARE MORE EASILY",
-    title: "Quickly find childcare that truly fits your family.",
-    lead: "Daycares, CPEs, home childcare and sitters: describe your need, discover relevant local listings and keep your search in one place.",
-    primary: "Find childcare for free",
-    secondary: "View listings",
-    proof: ["Free search", "Local listings", "Alerts in your space"],
-    listingsEyebrow: "LISTINGS TO DISCOVER",
-    listingsTitle: "See the kind of childcare you can find on MyCoco right away.",
-    listingsText: "Profiles sourced from public data stay clearly identified. Registered providers can enrich their listing with presentation, openings, activities, pricing and photos.",
-    seeListing: "View listing",
-    howTitle: "Tell us what you need. MyCoco helps you decide who to contact.",
-    how: [["01", "Describe your need", "City, child age, childcare type and desired start date."],["02", "Compare listings", "Spot providers that best fit your situation."],["03", "Keep track", "Create your space to review requests, receive alerts and restart your search."]],
-    providerEyebrow: "ARE YOU A CHILDCARE PROVIDER?",
-    providerTitle: "Turn your profile into a listing families want to contact.",
-    providerText: "Show your approach, activities, available days, hours, pricing and, once complete, your photos. MyCoco is built to bring more relevant demand, not just page views.",
-    providerCta: "Create my listing for free",
-    familyTitle: "Your childcare search should not disappear into tabs and screenshots.",
-    familyText: "Your family space will keep your searches, show how long they have been active, let you restart them, save favourite listings and receive alerts when new options match your criteria.",
-    familyCta: "Create family space",
-    aboutTitle: "MyCoco starts from one simple problem: finding childcare takes too much time.",
-    aboutText: "We are not building another directory. We are building a platform that connects real family needs with available providers through a clearer, more local and useful experience.",
-    aboutCta: "Why MyCoco",
-    finalTitle: "Start with your need. Not an endless list.",
+    eyebrow: "MYCOCO · CHILDCARE, MADE SIMPLE",
+    title: "Find childcare that truly fits your family.",
+    lead: "MyCoco connects families and childcare providers around what really matters: distance, age, hours, openings, languages and your child’s needs.",
+    primary: "Find childcare",
+    provider: "I’m a childcare provider",
+    proof: ["Free for families", "Personalized matching", "Updated openings"],
+    matchTitle: "A useful result, not an endless list.",
+    matchText: "Each provider is compared with your essential criteria and preferences so you can prioritize the best options.",
+    criteriaTitle: "Your child is more than an age and postal code.",
+    criteriaText: "Required criteria find compatible options. Optional preferences improve matching without making the search complicated.",
+    basics: "Essentials",
+    basicsItems: ["City or postal code", "Child age", "Start date", "Days and hours", "Childcare type"],
+    preferences: "Preferences",
+    preferencesItems: ["Allergies and meals", "Pets", "Languages spoken", "Preferred language for the child", "Favourite activities", "Naps and routines"],
+    liveTitle: "A spot opens up? The provider updates it right away.",
+    liveText: "Providers manage remaining spots, hours and admission preferences from their space. When a child joins, capacity can be updated immediately to reduce stale information.",
+    providerTitle: "A professional space built to manage, not just advertise.",
+    providerText: "Providers can complete their profile, update openings, languages, activities, meals and childcare preferences, and follow families that fit their offer.",
+    childTitle: "A real child profile so families stop repeating everything.",
+    childText: "Name, allergies, meals, favourite activities, naps, languages, routines and useful information stay organized in the family space, with control over what gets shared.",
+    ecosystemEyebrow: "MORE THAN A DIRECTORY",
+    ecosystemTitle: "MyCoco becomes the ecosystem for families and childhood professionals.",
+    ecosystemText: "Childcare is the starting point. Next: activities, camps, events, professionals, backup care and useful family services — all connected to the same family profile and trust layer.",
+    familyCta: "Start for free",
+    providerCta: "Create my professional space",
   };
 
-  return <main className="mc-home-marketplace">
-    <section className="mc-hero">
-      <div className="mc-wrap mc-hero-grid">
-        <div className="mc-hero-copy">
-          <span className="mc-kicker">{t.eyebrow}</span>
+  return <main className="mc-home10">
+    <section className="mc10-hero">
+      <div className="mc10-wrap mc10-hero-grid">
+        <div className="mc10-copy">
+          <span className="mc10-kicker">{t.eyebrow}</span>
           <h1>{t.title}</h1>
           <p>{t.lead}</p>
-          <div className="mc-actions"><Link className="mc-btn primary" href={`/${locale}/mon-besoin`}>{t.primary}<span>→</span></Link><Link className="mc-btn secondary" href={`/${locale}/garderies`}>{t.secondary}</Link></div>
-          <div className="mc-proof">{t.proof.map((item) => <span key={item}><b>✓</b>{item}</span>)}</div>
-        </div>
-        <div className="mc-hero-search">
-          <span>{fr ? "COMMENCER UNE RECHERCHE" : "START A SEARCH"}</span>
-          <h2>{fr ? "Que recherchez-vous pour votre enfant ?" : "What are you looking for?"}</h2>
-          <div className="mc-search-field"><small>{fr ? "Secteur" : "Area"}</small><strong>{fr ? "Ville ou code postal" : "City or postal code"}</strong></div>
-          <div className="mc-search-grid"><div><small>{fr ? "Âge" : "Age"}</small><strong>{fr ? "Âge de l’enfant" : "Child age"}</strong></div><div><small>{fr ? "Besoin" : "Need"}</small><strong>{fr ? "Type de garde" : "Childcare type"}</strong></div></div>
-          <Link href={`/${locale}/mon-besoin`}>{fr ? "Lancer ma recherche" : "Start my search"}<span>→</span></Link>
-          <p>{fr ? "Aucun compte nécessaire pour commencer." : "No account required to start."}</p>
-        </div>
-      </div>
-    </section>
-
-    <section className="mc-listings-section">
-      <div className="mc-wrap">
-        <div className="mc-section-head"><span className="mc-kicker">{t.listingsEyebrow}</span><h2>{t.listingsTitle}</h2><p>{t.listingsText}</p></div>
-        <div className="mc-listing-grid">{featured.map((record, index) => <Link key={record.id} className="mc-listing-card" href={`/${locale}/garderie/${record.slug}`}>
-          <div className={`mc-listing-visual visual-${(index % 3) + 1}`}>
-            <span>{typeLabel(record.type, fr)}</span>
-            <div><b>{record.name.slice(0,1).toUpperCase()}</b><small>{fr ? "Photo ajoutée par le service après inscription" : "Photo added by the provider after registration"}</small></div>
+          <div className="mc10-actions">
+            <Link className="mc10-btn primary" href={`/${locale}/mon-besoin`}>{t.primary}<span>→</span></Link>
+            <Link className="mc10-btn secondary" href={`/${locale}/pour-les-services`}>{t.provider}</Link>
           </div>
-          <div className="mc-listing-body"><small>{record.city}{record.postalCode ? ` · ${record.postalCode}` : ""}</small><h3>{record.name}</h3><div className="mc-listing-meta"><span>{record.capacityTotal ? `${record.capacityTotal} ${fr ? "places déclarées" : "declared spots"}` : (fr ? "Capacité à confirmer" : "Capacity to confirm")}</span><span>{fr ? "Informations vérifiables uniquement" : "Verifiable information only"}</span></div><strong>{t.seeListing}<span>→</span></strong></div>
-        </Link>)}</div>
-        <div className="mc-center"><Link className="mc-btn secondary" href={`/${locale}/garderies`}>{fr ? "Voir toutes les annonces" : "View all listings"}</Link></div>
+          <div className="mc10-proof">{t.proof.map((item) => <span key={item}><b>✓</b>{item}</span>)}</div>
+        </div>
+
+        <div className="mc10-match-card" aria-label={fr ? "Exemple de résultat MyCoco" : "MyCoco matching example"}>
+          <div className="mc10-match-top"><span>MYCOCO MATCH</span><b>94%</b></div>
+          <h2>{fr ? "Les Petits Explorateurs" : "Little Explorers"}</h2>
+          <p>{fr ? "Milieu familial · Mirabel" : "Home childcare · Mirabel"}</p>
+          <div className="mc10-match-facts">
+            <div><small>{fr ? "DISTANCE" : "DISTANCE"}</small><strong>2,4 km</strong></div>
+            <div><small>{fr ? "PLACES" : "OPENINGS"}</small><strong>{fr ? "2 restantes" : "2 left"}</strong></div>
+            <div><small>{fr ? "HORAIRES" : "HOURS"}</small><strong>7:00–17:30</strong></div>
+          </div>
+          <div className="mc10-match-tags"><span>✓ {fr ? "0–18 mois" : "0–18 months"}</span><span>✓ Français</span><span>✓ {fr ? "Sans animaux" : "No pets"}</span></div>
+          <div className="mc10-match-note"><span>↻</span><div><strong>{fr ? "Disponibilité mise à jour" : "Availability updated"}</strong><small>{fr ? "par le service" : "by the provider"}</small></div></div>
+        </div>
       </div>
     </section>
 
-    <section className="mc-how-section"><div className="mc-wrap"><div className="mc-section-head compact"><h2>{t.howTitle}</h2></div><div className="mc-how-grid">{t.how.map(([n,title,text]) => <article key={n}><b>{n}</b><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
+    <section className="mc10-simple">
+      <div className="mc10-wrap mc10-simple-grid">
+        <div><span className="mc10-kicker">MATCHING MYCOCO</span><h2>{t.matchTitle}</h2><p>{t.matchText}</p></div>
+        <div className="mc10-score"><b>94%</b><span>{fr ? "de compatibilité" : "compatibility"}</span><small>{fr ? "calculé selon vos critères" : "based on your criteria"}</small></div>
+      </div>
+    </section>
 
-    <section className="mc-split-section"><div className="mc-wrap mc-split-grid"><article className="family"><span>{fr ? "POUR LES FAMILLES" : "FOR FAMILIES"}</span><h2>{t.familyTitle}</h2><p>{t.familyText}</p><Link href={`/${locale}/inscription?role=family`}>{t.familyCta}<b>→</b></Link></article><article className="provider"><span>{t.providerEyebrow}</span><h2>{t.providerTitle}</h2><p>{t.providerText}</p><Link href={`/${locale}/inscription?role=provider`}>{t.providerCta}<b>→</b></Link></article></div></section>
+    <section className="mc10-criteria">
+      <div className="mc10-wrap">
+        <div className="mc10-head"><span className="mc10-kicker">{fr ? "UNE RECHERCHE QUI VOUS RESSEMBLE" : "A SEARCH THAT FITS YOU"}</span><h2>{t.criteriaTitle}</h2><p>{t.criteriaText}</p></div>
+        <div className="mc10-criteria-grid">
+          <article><span>{t.basics}</span>{t.basicsItems.map((item) => <div key={item}><b>✓</b>{item}</div>)}</article>
+          <article><span>{t.preferences}</span>{t.preferencesItems.map((item) => <div key={item}><b>+</b>{item}</div>)}</article>
+        </div>
+      </div>
+    </section>
 
-    <section className="mc-about-section"><div className="mc-wrap mc-about-grid"><h2>{t.aboutTitle}</h2><div><p>{t.aboutText}</p><Link href={`/${locale}/a-propos`}>{t.aboutCta}<span>→</span></Link></div></div></section>
+    <section className="mc10-live">
+      <div className="mc10-wrap mc10-live-grid">
+        <div className="mc10-live-visual">
+          <div className="mc10-capacity"><span>{fr ? "PLACES DISPONIBLES" : "AVAILABLE SPOTS"}</span><strong>2</strong><small>{fr ? "sur 6 places" : "of 6 spots"}</small></div>
+          <div className="mc10-capacity-row"><span>{fr ? "Léa rejoint le service" : "Léa joins the provider"}</span><b>−1</b></div>
+          <div className="mc10-capacity-row active"><span>{fr ? "Capacité restante" : "Remaining capacity"}</span><b>1</b></div>
+        </div>
+        <div><span className="mc10-kicker">{fr ? "DISPONIBILITÉS EN TEMPS RÉEL" : "LIVE AVAILABILITY"}</span><h2>{t.liveTitle}</h2><p>{t.liveText}</p><Link href={`/${locale}/pour-les-services`}>{t.providerCta}<span>→</span></Link></div>
+      </div>
+    </section>
 
-    <section className="mc-final"><div className="mc-wrap"><h2>{t.finalTitle}</h2><Link className="mc-btn light" href={`/${locale}/mon-besoin`}>{t.primary}<span>→</span></Link></div></section>
+    <section className="mc10-dual">
+      <div className="mc10-wrap mc10-dual-grid">
+        <article className="family"><span>{fr ? "ESPACE FAMILLE" : "FAMILY SPACE"}</span><h2>{t.childTitle}</h2><p>{t.childText}</p><div className="mc10-pills"><b>{fr ? "Allergies" : "Allergies"}</b><b>{fr ? "Repas" : "Meals"}</b><b>{fr ? "Siestes" : "Naps"}</b><b>{fr ? "Activités" : "Activities"}</b><b>{fr ? "Langues" : "Languages"}</b></div><Link href={`/${locale}/inscription?role=family`}>{t.familyCta}<span>→</span></Link></article>
+        <article className="provider"><span>{fr ? "ESPACE PROFESSIONNEL" : "PROFESSIONAL SPACE"}</span><h2>{t.providerTitle}</h2><p>{t.providerText}</p><div className="mc10-pills"><b>{fr ? "Places" : "Openings"}</b><b>{fr ? "Horaires" : "Hours"}</b><b>{fr ? "Familles" : "Families"}</b><b>{fr ? "Activités" : "Activities"}</b><b>{fr ? "Profil" : "Profile"}</b></div><Link href={`/${locale}/inscription?role=provider`}>{t.providerCta}<span>→</span></Link></article>
+      </div>
+    </section>
+
+    <section className="mc10-ecosystem">
+      <div className="mc10-wrap mc10-eco-grid">
+        <div><span className="mc10-kicker">{t.ecosystemEyebrow}</span><h2>{t.ecosystemTitle}</h2></div>
+        <div><p>{t.ecosystemText}</p><div className="mc10-eco-list"><span>{fr ? "Garde" : "Childcare"}</span><span>{fr ? "Activités" : "Activities"}</span><span>{fr ? "Camps" : "Camps"}</span><span>{fr ? "Événements" : "Events"}</span><span>{fr ? "Professionnels" : "Professionals"}</span><span>Backup</span></div></div>
+      </div>
+    </section>
+
+    <section className="mc10-final"><div className="mc10-wrap"><div><small>MYCOCO</small><h2>{fr ? "Moins chercher. Mieux choisir." : "Search less. Choose better."}</h2></div><Link className="mc10-btn light" href={`/${locale}/mon-besoin`}>{t.primary}<span>→</span></Link></div></section>
 
     <style>{`
-      .mc-home-marketplace{--ink:#0d3b3f;--turq:#12a9a2;--turq-dark:#078b87;--cream:#fffdf8;--soft:#eef9f7;--line:#d6e9e6;--muted:#60797a;color:var(--ink);background:var(--cream)}.mc-wrap{width:min(1180px,calc(100% - 40px));margin:auto}.mc-hero{padding:74px 0 82px;background:linear-gradient(180deg,#fffdf8 0%,#f1fbf9 100%);border-bottom:1px solid var(--line)}.mc-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:70px;align-items:center}.mc-kicker{font-size:11px;font-weight:950;letter-spacing:.13em;color:var(--turq-dark)}.mc-hero-copy h1{font-size:clamp(50px,6.4vw,82px);line-height:.94;letter-spacing:-.072em;max-width:780px;margin:16px 0 23px;color:var(--ink)}.mc-hero-copy>p{max-width:680px;font-size:18px;line-height:1.65;color:var(--muted)}.mc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.mc-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 20px;border-radius:13px;font-size:13px;font-weight:900}.mc-btn.primary{background:var(--turq);color:#fff;box-shadow:0 13px 30px rgba(18,169,162,.2)}.mc-btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}.mc-btn.light{background:#fff;color:var(--ink)}.mc-proof{display:flex;flex-wrap:wrap;gap:16px;margin-top:17px}.mc-proof span{display:flex;align-items:center;gap:6px;color:#557273;font-size:11px;font-weight:800}.mc-proof b{color:var(--turq-dark)}.mc-hero-search{background:#fff;border:1px solid var(--line);border-radius:24px;padding:25px;box-shadow:0 26px 70px rgba(13,59,63,.11)}.mc-hero-search>span{font-size:9px;font-weight:950;letter-spacing:.12em;color:var(--turq-dark)}.mc-hero-search h2{font-size:27px;line-height:1.04;letter-spacing:-.045em;margin:12px 0 19px}.mc-search-field,.mc-search-grid>div{border:1px solid #dbe8e6;border-radius:12px;padding:12px 13px}.mc-search-field small,.mc-search-grid small{display:block;font-size:8px;color:#789091;font-weight:800;margin-bottom:3px}.mc-search-field strong,.mc-search-grid strong{font-size:11px}.mc-search-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mc-hero-search>a{display:flex;justify-content:space-between;align-items:center;margin-top:12px;min-height:49px;padding:0 15px;border-radius:11px;background:var(--ink);color:#fff;font-size:12px;font-weight:900}.mc-hero-search>p{text-align:center;color:#819191;font-size:9px;margin:9px 0 0}.mc-listings-section{padding:88px 0;background:#fff}.mc-section-head{max-width:790px}.mc-section-head h2{font-size:clamp(34px,4.5vw,56px);line-height:1.02;letter-spacing:-.055em;margin:12px 0 14px}.mc-section-head p{color:var(--muted);font-size:15px;line-height:1.65}.mc-listing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}.mc-listing-card{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}.mc-listing-card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(13,59,63,.1)}.mc-listing-visual{height:190px;padding:15px;position:relative}.mc-listing-visual.visual-1{background:linear-gradient(145deg,#dff7f4,#f8eee1)}.mc-listing-visual.visual-2{background:linear-gradient(145deg,#e8f0fb,#e8f8f5)}.mc-listing-visual.visual-3{background:linear-gradient(145deg,#f4eadf,#e5f5ef)}.mc-listing-visual>span{position:absolute;top:14px;left:14px;background:#fff;color:var(--ink);border-radius:999px;padding:7px 9px;font-size:8px;font-weight:900}.mc-listing-visual>div{height:100%;display:grid;place-items:center;align-content:center;gap:8px;text-align:center}.mc-listing-visual b{display:grid;place-items:center;width:62px;height:62px;border-radius:18px;background:rgba(255,255,255,.8);font-size:26px}.mc-listing-visual small{max-width:170px;color:#6f8181;font-size:8px;line-height:1.4}.mc-listing-body{padding:18px}.mc-listing-body>small{color:#778b8b;font-size:9px}.mc-listing-body h3{font-size:21px;line-height:1.07;letter-spacing:-.035em;margin:8px 0 13px}.mc-listing-meta{display:grid;gap:5px;color:#627979;font-size:9px}.mc-listing-body>strong{display:flex;justify-content:space-between;align-items:center;margin-top:17px;padding-top:13px;border-top:1px solid #e8f0ef;color:var(--turq-dark);font-size:10px}.mc-center{text-align:center;margin-top:28px}.mc-how-section{padding:88px 0;background:var(--soft)}.mc-section-head.compact{max-width:850px}.mc-how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}.mc-how-grid article{background:#fff;border:1px solid var(--line);border-radius:18px;padding:25px}.mc-how-grid article>b{font-size:10px;color:var(--turq-dark)}.mc-how-grid h3{font-size:22px;letter-spacing:-.03em;margin:28px 0 9px}.mc-how-grid p{color:var(--muted);font-size:13px;line-height:1.6}.mc-split-section{padding:88px 0;background:#fff}.mc-split-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mc-split-grid article{border-radius:24px;padding:36px}.mc-split-grid article.family{background:#e9f8f5;color:var(--ink)}.mc-split-grid article.provider{background:#0d3b3f;color:#fff}.mc-split-grid article>span{font-size:9px;font-weight:950;letter-spacing:.12em}.mc-split-grid .family>span{color:var(--turq-dark)}.mc-split-grid .provider>span{color:#75d8d1}.mc-split-grid h2{font-size:32px;line-height:1.03;letter-spacing:-.045em;margin:14px 0}.mc-split-grid p{font-size:14px;line-height:1.65;max-width:520px}.mc-split-grid .family p{color:#5d7475}.mc-split-grid .provider p{color:#c1d7d6}.mc-split-grid a{display:inline-flex;gap:8px;margin-top:15px;font-size:12px;font-weight:900}.mc-split-grid .family a{color:var(--turq-dark)}.mc-split-grid .provider a{color:#fff}.mc-about-section{padding:82px 0;background:#f7f1e8}.mc-about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:70px;align-items:start}.mc-about-grid h2{font-size:clamp(34px,4.5vw,55px);line-height:1.02;letter-spacing:-.055em;margin:0}.mc-about-grid p{color:#6a7472;font-size:15px;line-height:1.7;margin-top:0}.mc-about-grid a{display:inline-flex;gap:8px;color:var(--ink);font-size:12px;font-weight:900;margin-top:9px}.mc-final{padding:68px 0;background:var(--ink);color:#fff}.mc-final>div{display:flex;align-items:center;justify-content:space-between;gap:30px}.mc-final h2{font-size:clamp(32px,4.5vw,54px);line-height:1;letter-spacing:-.055em;max-width:760px;margin:0}@media(max-width:900px){.mc-hero-grid,.mc-about-grid{grid-template-columns:1fr}.mc-listing-grid,.mc-how-grid{grid-template-columns:1fr 1fr}.mc-hero-search{max-width:600px}.mc-split-grid{grid-template-columns:1fr}}@media(max-width:600px){.mc-wrap{width:calc(100% - 28px)}.mc-hero{padding:48px 0 55px}.mc-hero-copy h1{font-size:48px}.mc-listing-grid,.mc-how-grid{grid-template-columns:1fr}.mc-final>div{align-items:flex-start;flex-direction:column}.mc-search-grid{grid-template-columns:1fr}.mc-listings-section,.mc-how-section,.mc-split-section,.mc-about-section{padding:62px 0}}
+      .mc-home10{--ink:#153b35;--ink2:#0e2c27;--coral:#f07b63;--mint:#dff3ea;--cream:#fffaf4;--paper:#fff;--line:#e1e9e4;--muted:#667b73;background:var(--cream);color:var(--ink)}.mc10-wrap{width:min(1160px,calc(100% - 40px));margin:auto}.mc10-hero{padding:84px 0 88px;background:radial-gradient(circle at 80% 18%,#e4f5ed 0,transparent 33%),var(--cream);border-bottom:1px solid var(--line)}.mc10-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:72px;align-items:center}.mc10-kicker{font-size:10px;font-weight:950;letter-spacing:.14em;color:#56816f}.mc10-copy h1{max-width:780px;margin:15px 0 21px;font-size:clamp(50px,6.6vw,84px);line-height:.94;letter-spacing:-.07em}.mc10-copy>p{max-width:690px;margin:0;color:var(--muted);font-size:18px;line-height:1.62}.mc10-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:29px}.mc10-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:53px;padding:0 20px;border-radius:14px;font-size:12px;font-weight:900}.mc10-btn.primary{background:var(--ink);color:#fff;box-shadow:0 13px 28px rgba(21,59,53,.17)}.mc10-btn.primary:hover{background:var(--ink2);transform:translateY(-2px)}.mc10-btn.secondary{background:#fff;border:1px solid #dbe5df;color:var(--ink)}.mc10-btn.light{background:#fff;color:var(--ink)}.mc10-proof{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}.mc10-proof span{font-size:10px;font-weight:800;color:#62786f}.mc10-proof b{color:#3f856a;margin-right:5px}.mc10-match-card{background:#fff;border:1px solid var(--line);border-radius:26px;padding:25px;box-shadow:0 28px 75px rgba(21,59,53,.12)}.mc10-match-top{display:flex;justify-content:space-between;align-items:center}.mc10-match-top span{font-size:9px;font-weight:950;letter-spacing:.13em;color:#789187}.mc10-match-top b{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--mint);font-size:18px}.mc10-match-card h2{margin:19px 0 4px;font-size:26px;letter-spacing:-.04em}.mc10-match-card>p{margin:0;color:#778a83;font-size:11px}.mc10-match-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:18px}.mc10-match-facts div{padding:11px 9px;border-radius:11px;background:#f6f8f6}.mc10-match-facts small{display:block;font-size:7px;font-weight:900;letter-spacing:.08em;color:#8b9b95}.mc10-match-facts strong{display:block;margin-top:4px;font-size:11px}.mc10-match-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.mc10-match-tags span{padding:7px 9px;border-radius:999px;background:#eef7f2;color:#3d6656;font-size:8px;font-weight:850}.mc10-match-note{display:flex;gap:9px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid #edf1ee}.mc10-match-note>span{display:grid;place-items:center;width:31px;height:31px;border-radius:9px;background:#fff0eb;color:var(--coral)}.mc10-match-note strong,.mc10-match-note small{display:block}.mc10-match-note strong{font-size:9px}.mc10-match-note small{font-size:8px;color:#85928c;margin-top:2px}.mc10-simple{padding:72px 0;background:#fff}.mc10-simple-grid{display:grid;grid-template-columns:1fr 230px;gap:70px;align-items:center}.mc10-simple h2,.mc10-head h2,.mc10-live h2,.mc10-dual h2,.mc10-ecosystem h2{font-size:clamp(34px,4.5vw,55px);line-height:1.02;letter-spacing:-.055em;margin:11px 0 13px}.mc10-simple p,.mc10-head p,.mc10-live p,.mc10-dual p,.mc10-ecosystem p{color:var(--muted);font-size:14px;line-height:1.65}.mc10-score{padding:23px;border-radius:20px;background:var(--ink);color:#fff}.mc10-score b{display:block;font-size:52px;line-height:1;letter-spacing:-.06em}.mc10-score span,.mc10-score small{display:block}.mc10-score span{font-size:11px;font-weight:900;margin-top:7px}.mc10-score small{font-size:8px;color:#a9bdb5;margin-top:3px}.mc10-criteria{padding:88px 0;background:#f3f8f5}.mc10-head{max-width:800px}.mc10-criteria-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:31px}.mc10-criteria-grid article{padding:25px;background:#fff;border:1px solid var(--line);border-radius:21px}.mc10-criteria-grid article>span{display:block;margin-bottom:16px;font-size:10px;font-weight:950;letter-spacing:.1em;color:#618274}.mc10-criteria-grid article div{display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid #edf1ee;font-size:11px;font-weight:800}.mc10-criteria-grid article b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#edf6f1;color:#4c7d69;font-size:9px}.mc10-live{padding:88px 0;background:#fff}.mc10-live-grid{display:grid;grid-template-columns:390px 1fr;gap:75px;align-items:center}.mc10-live-visual{padding:21px;border-radius:23px;background:#fff7f3;border:1px solid #f1ddd5}.mc10-capacity{padding:23px;border-radius:17px;background:#fff}.mc10-capacity span,.mc10-capacity small{display:block}.mc10-capacity span{font-size:8px;font-weight:950;letter-spacing:.12em;color:#9b796e}.mc10-capacity strong{display:block;font-size:66px;line-height:1;margin:11px 0 4px;letter-spacing:-.07em}.mc10-capacity small{font-size:9px;color:#947f78}.mc10-capacity-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.65);font-size:9px;font-weight:850}.mc10-capacity-row.active{background:var(--ink);color:#fff}.mc10-live a,.mc10-dual a{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:11px;font-weight:900;color:var(--ink)}.mc10-dual{padding:88px 0;background:var(--cream)}.mc10-dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mc10-dual article{padding:30px;border-radius:24px;min-height:390px}.mc10-dual article>span{font-size:9px;font-weight:950;letter-spacing:.12em}.mc10-dual article.family{background:#e8f5ef}.mc10-dual article.provider{background:#fff0e9}.mc10-dual h2{font-size:37px;margin-top:45px}.mc10-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}.mc10-pills b{padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.65);font-size:8px}.mc10-ecosystem{padding:94px 0;background:#102f29;color:#fff}.mc10-eco-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}.mc10-ecosystem .mc10-kicker{color:#92bca9}.mc10-ecosystem p{color:#bfd0c8;margin-top:5px}.mc10-eco-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.mc10-eco-list span{padding:9px 11px;border:1px solid rgba(255,255,255,.16);border-radius:999px;color:#dbe8e2;font-size:9px;font-weight:850}.mc10-final{padding:52px 0;background:var(--coral);color:#fff}.mc10-final>div{display:flex;align-items:center;justify-content:space-between;gap:25px}.mc10-final small{font-size:8px;font-weight:950;letter-spacing:.13em}.mc10-final h2{font-size:clamp(32px,4vw,49px);letter-spacing:-.055em;margin:6px 0 0}@media(max-width:900px){.mc10-hero-grid,.mc10-simple-grid,.mc10-live-grid,.mc10-eco-grid{grid-template-columns:1fr}.mc10-match-card{max-width:540px}.mc10-live-visual{max-width:540px}.mc10-dual-grid{grid-template-columns:1fr}.mc10-simple-grid,.mc10-live-grid,.mc10-eco-grid{gap:35px}}@media(max-width:600px){.mc10-wrap{width:min(100% - 28px,1160px)}.mc10-hero{padding:55px 0}.mc10-copy h1{font-size:48px}.mc10-copy>p{font-size:15px}.mc10-actions{display:grid}.mc10-btn{width:100%}.mc10-proof{display:grid;gap:7px}.mc10-match-facts{grid-template-columns:1fr}.mc10-criteria-grid{grid-template-columns:1fr}.mc10-dual h2{font-size:31px;margin-top:28px}.mc10-final>div{align-items:flex-start;flex-direction:column}.mc10-final .mc10-btn{width:auto}}
     `}</style>
   </main>;
 }
