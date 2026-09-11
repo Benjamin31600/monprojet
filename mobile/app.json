@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "MyCoco",
+    "slug": "mycoco",
+    "scheme": "mycoco",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": ["expo-router", "expo-secure-store"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ca.mycoco.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "ca.mycoco.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF8F0"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
