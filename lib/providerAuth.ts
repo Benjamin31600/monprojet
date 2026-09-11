@@ -56,7 +56,20 @@ export async function getProviderAccount() {
   const db = sql();
   if (!db) return null;
   const rows = await db`
-    SELECT a.id, a.email, a.provider_id, p.name, p.city, p.provider_type
+    SELECT
+      a.id,
+      a.email,
+      a.provider_id,
+      p.name,
+      p.city,
+      p.provider_type,
+      p.capacity_total,
+      p.claimed,
+      p.verified,
+      p.phone,
+      p.website,
+      p.address,
+      p.postal_code
     FROM provider_accounts a
     JOIN providers p ON p.id = a.provider_id
     WHERE a.id = ${accountId}
