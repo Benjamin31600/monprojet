@@ -27,16 +27,20 @@ export async function saveParentDemand(demand: ParentDemand) {
         (${demand.locale}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || ""}, ${demand.desiredStartDate || null}, ${demand.source})
       RETURNING id
     `;
-    try {
-      await sql`
-        INSERT INTO family_searches
-          (family_account_id, city_or_postal, age_range, childcare_type, desired_start_date, source)
-        VALUES
-          (${demand.familyAccountId || null}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || null}, ${demand.desiredStartDate || null}, ${demand.source})
-      `;
-    } catch (secondaryError) {
-      console.error("MyCoco: unable to mirror family search", secondaryError);
+
+    if (demand.familyAccountId) {
+      try {
+        await sql`
+          INSERT INTO family_searches
+            (family_id, city_or_postal, age_range, childcare_type, desired_start_date, source, status)
+          VALUES
+            (${demand.familyAccountId}, ${demand.cityOrPostal}, ${demand.ageRange}, ${demand.childcareType || null}, ${demand.desiredStartDate || null}, ${demand.source}, 'active')
+        `;
+      } catch (secondaryError) {
+        console.error("MyCoco: unable to mirror signed-in family search", secondaryError);
+      }
     }
+
     return { saved: true as const, id: rows[0]?.id as string | undefined };
   } catch (error) {
     console.error("MyCoco: unable to save parent demand", error);
