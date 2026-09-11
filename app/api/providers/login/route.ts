@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   const password = String(form.get("password") || "");
   const sql = db();
-  if (!sql || !email || !password) return NextResponse.redirect(new URL(`/${locale}/espace-service?error=login`, request.url), 303);
+  if (!sql || !email || !password) return NextResponse.redirect(new URL(`/${locale}/connexion?role=provider&erreur=validation`, request.url), 303);
   const rows = await sql`SELECT id, password_hash FROM provider_accounts WHERE email = ${email} LIMIT 1`;
-  if (!rows[0] || !verifyPassword(password, rows[0].password_hash as string)) return NextResponse.redirect(new URL(`/${locale}/espace-service?error=login`, request.url), 303);
+  if (!rows[0] || !verifyPassword(password, rows[0].password_hash as string)) return NextResponse.redirect(new URL(`/${locale}/connexion?role=provider&erreur=identifiants`, request.url), 303);
   await setProviderSession(rows[0].id as string);
-  return NextResponse.redirect(new URL(`/${locale}/espace-service`, request.url), 303);
+  return NextResponse.redirect(new URL(`/${locale}/espace-service?connexion=1`, request.url), 303);
 }
