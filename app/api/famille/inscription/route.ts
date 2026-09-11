@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createFamilyAccount, startFamilySession } from "@/lib/family-auth";
+import { sendAccountWelcomeEmail } from "@/lib/email";
 
 const schema = z.object({
   locale: z.enum(["fr", "en"]).default("fr"),
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   const form = await request.formData();
   const parsed = schema.safeParse(Object.fromEntries(form.entries()));
   const locale = form.get("locale") === "en" ? "en" : "fr";
-  const returnTo = typeof form.get("returnTo") === "string" && form.get("returnTo") ? String(form.get("returnTo")) : `/${locale}/espace-famille`;
+  const returnTo = typeof form.get("returnTo") === "string" && form.get("returnTo") ? String(form.get("returnTo")) : `/${locale}/espace-famille?nouveau=1`;
   if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/inscription?role=family&erreur=validation`, request.url), 303);
 
   const result = await createFamilyAccount({
@@ -40,6 +41,14 @@ export async function POST(request: NextRequest) {
     const code = result.reason === "email_exists" ? "email-exists" : "server";
     return NextResponse.redirect(new URL(`/${locale}/inscription?role=family&erreur=${code}`, request.url), 303);
   }
+
   await startFamilySession(result.account.id);
+  await sendAccountWelcomeEmail({
+    to: parsed.data.email.toLowerCase(),
+    name: parsed.data.firstName,
+    locale,
+    audience: "family",
+  }).catch((error) => console.error("MyCoco family welcome email error", error));
+
   return NextResponse.redirect(new URL(returnTo, request.url), 303);
 }
