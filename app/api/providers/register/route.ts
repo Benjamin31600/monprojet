@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
 import { hashPassword, setProviderSession } from "@/lib/providerAuth";
+import { sendAccountWelcomeEmail } from "@/lib/email";
 
 const schema = z.object({
   locale: z.enum(["fr", "en"]).default("fr"),
@@ -43,30 +44,55 @@ export async function POST(request: NextRequest) {
     website: form.get("website") || "",
     capacity: form.get("capacity") || undefined,
   });
-  if (!parsed.success) return NextResponse.json({ error: "Informations invalides" }, { status: 400 });
+  const locale = form.get("locale") === "en" ? "en" : "fr";
+  if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=validation`, request.url), 303);
+
   const sql = db();
-  if (!sql) return NextResponse.json({ error: "La base de données n'est pas configurée." }, { status: 503 });
+  if (!sql) return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=server`, request.url), 303);
 
   const email = parsed.data.email.toLowerCase();
   const existing = await sql`SELECT id FROM provider_accounts WHERE email = ${email} LIMIT 1`;
-  if (existing.length) {
-    const url = new URL(`/${parsed.data.locale}/inscription?role=provider&erreur=email`, request.url);
-    return NextResponse.redirect(url, 303);
-  }
+  if (existing.length) return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=email`, request.url), 303);
 
   const baseSlug = slugify(parsed.data.name);
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
-  const provider = await sql`
-    INSERT INTO providers (slug, name, provider_type, city, address, postal_code, phone, website, capacity_total, source, claimed, verified, updated_at)
-    VALUES (${slug}, ${parsed.data.name}, ${parsed.data.providerType}, ${parsed.data.city}, ${parsed.data.address || null}, ${parsed.data.postalCode || null}, ${parsed.data.phone || null}, ${parsed.data.website || null}, ${parsed.data.capacity ?? null}, 'provider-registration', true, false, now())
-    RETURNING id
-  `;
-  const account = await sql`
-    INSERT INTO provider_accounts (provider_id, email, password_hash)
-    VALUES (${provider[0].id}, ${email}, ${hashPassword(parsed.data.password)})
-    RETURNING id
-  `;
-  await setProviderSession(account[0].id as string);
-  const destination = parsed.data.returnTo || `/${parsed.data.locale}/espace-service`;
-  return NextResponse.redirect(new URL(destination, request.url), 303);
+
+  try {
+    const provider = await sql`
+      INSERT INTO providers (slug, name, provider_type, city, address, postal_code, phone, website, capacity_total, source, claimed, verified, updated_at)
+      VALUES (${slug}, ${parsed.data.name}, ${parsed.data.providerType}, ${parsed.data.city}, ${parsed.data.address || null}, ${parsed.data.postalCode || null}, ${parsed.data.phone || null}, ${parsed.data.website || null}, ${parsed.data.capacity ?? null}, 'provider-registration', true, false, now())
+      RETURNING id
+    `;
+    const providerId = provider[0].id as string;
+
+    const account = await sql`
+      INSERT INTO provider_accounts (provider_id, email, password_hash)
+      VALUES (${providerId}, ${email}, ${hashPassword(parsed.data.password)})
+      RETURNING id
+    `;
+
+    await sql`
+      INSERT INTO provider_profiles (provider_id, owner_email, website, phone, address, postal_code, capacity, claimed, onboarding_status)
+      VALUES (${providerId}, ${email}, ${parsed.data.website || null}, ${parsed.data.phone || null}, ${parsed.data.address || null}, ${parsed.data.postalCode || null}, ${parsed.data.capacity ?? null}, true, 'started')
+      ON CONFLICT (provider_id) DO UPDATE SET
+        owner_email = EXCLUDED.owner_email,
+        website = COALESCE(EXCLUDED.website, provider_profiles.website),
+        phone = COALESCE(EXCLUDED.phone, provider_profiles.phone),
+        address = COALESCE(EXCLUDED.address, provider_profiles.address),
+        postal_code = COALESCE(EXCLUDED.postal_code, provider_profiles.postal_code),
+        capacity = COALESCE(EXCLUDED.capacity, provider_profiles.capacity),
+        claimed = true,
+        onboarding_status = 'started',
+        updated_at = now()
+    `;
+
+    await setProviderSession(account[0].id as string);
+    await sendAccountWelcomeEmail({ to: email, name: parsed.data.name, locale, audience: "provider" }).catch((error) => console.error("MyCoco provider welcome email error", error));
+
+    const destination = parsed.data.returnTo || `/${locale}/espace-service?nouveau=1`;
+    return NextResponse.redirect(new URL(destination, request.url), 303);
+  } catch (error) {
+    console.error("MyCoco provider registration failed", error);
+    return NextResponse.redirect(new URL(`/${locale}/inscription?role=provider&erreur=server`, request.url), 303);
+  }
 }
