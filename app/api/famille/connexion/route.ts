@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
   const form = await request.formData();
   const parsed = schema.safeParse(Object.fromEntries(form.entries()));
   const locale = form.get("locale") === "en" ? "en" : "fr";
-  if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/espace-famille/connexion?erreur=validation`, request.url), 303);
+  if (!parsed.success) return NextResponse.redirect(new URL(`/${locale}/connexion?role=family&erreur=validation`, request.url), 303);
   const account = await authenticateFamily(parsed.data.email, parsed.data.password);
-  if (!account) return NextResponse.redirect(new URL(`/${locale}/espace-famille/connexion?erreur=identifiants`, request.url), 303);
+  if (!account) return NextResponse.redirect(new URL(`/${locale}/connexion?role=family&erreur=identifiants`, request.url), 303);
   await startFamilySession(account.id);
-  return NextResponse.redirect(new URL(`/${locale}/espace-famille`, request.url), 303);
+  return NextResponse.redirect(new URL(`/${locale}/espace-famille?connexion=1`, request.url), 303);
 }
